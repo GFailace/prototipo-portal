@@ -25,6 +25,10 @@ export class AppMenu {
                 items: [{ label: 'Dashboard', icon: 'pi pi-fw pi-home', routerLink: ['/'] }]
             },
             {
+                label: 'PMOC',
+                items: [{ label: 'Registrar PMOC', icon: 'pi pi-fw pi-pencil', routerLink: ['/pages/pmocs/registrar-pmoc'] }]
+            },
+            {
                 label: 'UI Components',
                 items: [
                     { label: 'Form Layout', icon: 'pi pi-fw pi-id-card', routerLink: ['/uikit/formlayout'] },

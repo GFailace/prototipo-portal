@@ -28,7 +28,7 @@ import { CommonModule } from '@angular/common';
 
                         <div class="flex flex-col gap-2">
                             <label for="equipamento">ID Equipamento | Setor | Capacidade *</label>
-                            <input id="equipamento" type="text" pInputText formControlName="equipamento" />
+                            <p-select id="equipamento" class="w-full" [options]="equipamentoOptions" formControlName="equipamento" placeholder="Selecione o equipamento"></p-select>
                         </div>
 
                         <div class="grid grid-cols-12 gap-2">
@@ -40,7 +40,7 @@ import { CommonModule } from '@angular/common';
 
                         <div class="flex flex-col gap-2">
                             <label for="tipoManutencao">Tipo de Manutenção *</label>
-                            <input id="tipoManutencao" type="text" pInputText formControlName="tipoManutencao" />
+                            <p-select id="tipoManutencao" class="w-full" [options]="tipoManutencaoOptions" formControlName="tipoManutencao" placeholder="Selecione o tipo"></p-select>
                         </div>
 
                         <div class="flex flex-col gap-2">
@@ -50,19 +50,19 @@ import { CommonModule } from '@angular/common';
                     </div>
 
                     <div class="card flex flex-col gap-4 mt-4">
-                        <div class="font-semibold text-xl">Responsável & Periodicidade</div>
+                        <div class="font-semibold text-xl">Responsável e Periodicidade</div>
                         <div class="flex flex-col gap-2">
                             <label for="responsavel">Responsável pelo Atendimento Técnico *</label>
                             <input id="responsavel" type="text" pInputText formControlName="responsavel" />
                         </div>
                         <div class="flex flex-col gap-2">
                             <label for="periodicidade">Periodicidade da Manutenção *</label>
-                            <input id="periodicidade" type="text" pInputText formControlName="periodicidade" />
+                            <p-select id="periodicidade" class="w-full" [options]="periodicidadeOptions" formControlName="periodicidade" placeholder="Selecione a periodicidade"></p-select>
                         </div>
                         <div class="grid grid-cols-12 gap-2">
                             <label for="proximaManutencao" class="flex items-center col-span-12 mb-2 md:col-span-4 md:mb-0">Previsão Próxima Manutenção</label>
                             <div class="col-span-12 md:col-span-8">
-                                <p-date-picker id="proximaManutencao" formControlName="proximaManutencao" dateFormat="dd/mm/yy"></p-date-picker>
+                                <p-date-picker id="proximaManutencao" formControlName="proximaManutencao" dateFormat="dd/mm/yyyy" placeholder="dd/mm/aaaa"></p-date-picker>
                             </div>
                         </div>
                     </div>
@@ -84,7 +84,7 @@ import { CommonModule } from '@angular/common';
                     </div>
 
                     <div class="card flex flex-col gap-4 mt-4">
-                        <div class="font-semibold text-xl">Observações & Evidências</div>
+                        <div class="font-semibold text-xl">Observações e Evidências</div>
                         <div class="flex flex-col gap-2">
                             <label for="observacoes">Observações | Problemas Encontrados</label>
                             <textarea id="observacoes" pInputTextarea formControlName="observacoes"></textarea>
@@ -92,7 +92,7 @@ import { CommonModule } from '@angular/common';
 
                         <div class="flex flex-col gap-2">
                             <label for="fotos">Upload de Fotos | Evidências</label>
-                            <p-fileUpload id="fotos" name="fotos" url="URL_DO_BACKEND" [maxFileSize]="10000000" [multiple]="true" [auto]="true"></p-fileUpload>
+                            <p-fileUpload id="fotos" name="fotos" url="URL_DO_BACKEND" [maxFileSize]="10000000" [multiple]="true" [auto]="true" chooseLabel="Upload"></p-fileUpload>
                         </div>
 
                         <div class="flex justify-end">
@@ -103,14 +103,14 @@ import { CommonModule } from '@angular/common';
             </div>
             <div class="flex mt-8">
                 <div class="card flex flex-col gap-4 w-full">
-                    <div class="font-semibold text-xl">Custos & Assinatura</div>
+                    <div class="font-semibold text-xl">Custos e Assinatura</div>
                     <div class="flex flex-col gap-2">
                         <label for="custos">Custos | Despesas</label>
                         <textarea id="custos" pInputTextarea formControlName="custos"></textarea>
                     </div>
                     <div class="flex flex-col gap-2">
                         <label for="assinatura">Confirmação | Assinatura Digital *</label>
-                        <input id="assinatura" type="text" pInputText formControlName="assinatura" />
+                        <p-select id="assinatura" class="w-full" [options]="assinaturaOptions" formControlName="assinatura" placeholder="Selecione confirmação"></p-select>
                     </div>
                 </div>
             </div>
@@ -126,15 +126,58 @@ export class CriarPmoc {
     formulario: FormGroup;
 
     statusOptions = [
-        { label: 'Funcionando', value: 'funcionando' },
-        { label: 'Com falhas', value: 'com_falhas' },
-        { label: 'Parado', value: 'parado' }
+        { label: 'EM OPERAÇÃO', value: 'em_operacao' },
+        { label: 'FORA DE OPERAÇÃO', value: 'fora_de_operacao' }
     ];
 
     clienteOptions = [
         { label: 'BHIO SUPPLY | ESTEIO - RS', value: 'BHIO SUPPLY | ESTEIO - RS' },
         { label: 'BHIO SUPPLY FILIAL | ESTEIO - RS', value: 'BHIO SUPPLY FILIAL | ESTEIO - RS' },
         { label: 'BHIO SUPPLY | CAMPO BOM - RS', value: 'BHIO SUPPLY | CAMPO BOM - RS' }
+    ];
+
+    equipamentoOptions = [
+        { label: 'AC001 | RECEBIMENTO | 12.000 BTUS', value: 'AC001' },
+        { label: 'AC002 | RECEBIMENTO | 18.000 BTUS', value: 'AC002' },
+        { label: 'AC003 | ESCRITÓRIO | 9.000 BTUS', value: 'AC003' },
+        { label: 'AC004 | SALA REUNIÃO | 24.000 BTUS', value: 'AC004' },
+        { label: 'AC005 | ARMAZÉM | 36.000 BTUS', value: 'AC005' },
+        { label: 'AC006 | COPA | 7.000 BTUS', value: 'AC006' },
+        { label: 'AC007 | LABORATÓRIO | 12.000 BTUS', value: 'AC007' },
+        { label: 'AC008 | AUDITÓRIO | 30.000 BTUS', value: 'AC008' },
+        { label: 'AC009 | RECEPÇÃO | 9.000 BTUS', value: 'AC009' },
+        { label: 'AC010 | SALA TI | 18.000 BTUS', value: 'AC010' },
+        { label: 'AC011 | DEPÓSITO | 24.000 BTUS', value: 'AC011' },
+        { label: 'AC012 | PRODUÇÃO | 48.000 BTUS', value: 'AC012' },
+        { label: 'AC013 | SHOWROOM | 12.000 BTUS', value: 'AC013' },
+        { label: 'AC014 | DIRETORIA | 9.000 BTUS', value: 'AC014' },
+        { label: 'AC015 | ESTOQUE | 36.000 BTUS', value: 'AC015' },
+        { label: 'AC016 | BIBLIOTECA | 9.000 BTUS', value: 'AC016' },
+        { label: 'AC017 | LOJA | 18.000 BTUS', value: 'AC017' },
+        { label: 'AC018 | CORREDOR | 7.000 BTUS', value: 'AC018' },
+        { label: 'AC019 | ENTRADA | 12.000 BTUS', value: 'AC019' },
+        { label: 'AC020 | CEO OFFICE | 24.000 BTUS', value: 'AC020' }
+    ];
+
+    tipoManutencaoOptions = [
+        { label: 'PMOC', value: 'PMOC' },
+        { label: 'PREVENTIVA', value: 'PREVENTIVA' },
+        { label: 'CORRETIVA', value: 'CORRETIVA' },
+        { label: 'PREDITIVA', value: 'PREDITIVA' },
+        { label: 'INSTALAÇÃO', value: 'INSTALACAO' },
+        { label: 'DESINSTALAÇÃO', value: 'DESINSTALACAO' }
+    ];
+
+    periodicidadeOptions = [
+        { label: 'MENSAL', value: 'MENSAL' },
+        { label: 'TRIMESTRAL', value: 'TRIMESTRAL' },
+        { label: 'SEMESTRAL', value: 'SEMESTRAL' },
+        { label: 'ANUAL', value: 'ANUAL' }
+    ];
+
+    assinaturaOptions = [
+        { label: 'Confirmo que a manutenção foi realizada SEM RESTRIÇÕES', value: 'sem_restricoes' },
+        { label: 'Confirmo que a manutenção foi realizada COM RESTRIÇÕES, conforme item 7', value: 'com_restricoes' }
     ];
 
     checklist = [

@@ -2,13 +2,13 @@ import { Routes } from '@angular/router';
 import { Documentation } from './documentation/documentation';
 import { Crud } from './crud/crud';
 import { Empty } from './empty/empty';
-import { Pmocs } from './pmocs/pmocs';
 
 export default [
     { path: 'documentation', component: Documentation },
     { path: 'crud', component: Crud },
     { path: 'empty', component: Empty },
-    { path: 'pmocs', component: Pmocs },
+    { path: 'clientes/listar-clientes', loadComponent: () => import('./clientes/listarClientes').then((m) => m.ListarClientesComponent) },
     { path: 'pmocs/registrar-pmoc', loadComponent: () => import('./pmocs/criarPmoc').then((m) => m.CriarPmoc) },
+    { path: 'pmocs/listar-pmocs', loadComponent: () => import('./pmocs/listarPmocs').then((m) => m.ListarPmocs) },
     { path: '**', redirectTo: '/notfound' }
 ] as Routes;

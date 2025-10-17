@@ -26,7 +26,7 @@ import { Product, ProductService } from '../../service/product.service';
                         <img src="https://primefaces.org/cdn/primevue/images/product/{{ product.image }}" class="shadow-lg" alt="{{ product.name }}" width="50" />
                     </td>
                     <td style="width: 35%; min-width: 7rem;">{{ product.name }}</td>
-                    <td style="width: 35%; min-width: 8rem;">{{ product.price | date:'dd/MM/yyyy' }}</td>
+                    <td style="width: 35%; min-width: 8rem;">{{ product.price | date:'dd/mm/yyyy' }}</td>
                     <td style="width: 15%;">
                         <button pButton pRipple type="button" icon="pi pi-arrow-up-right" class="p-button p-component p-button-text p-button-icon-only"></button>
                     </td>

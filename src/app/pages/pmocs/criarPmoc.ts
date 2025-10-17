@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { FluidModule } from 'primeng/fluid';
 import { InputTextModule } from 'primeng/inputtext';
@@ -7,13 +7,14 @@ import { SelectModule } from 'primeng/select';
 import { DatePickerModule } from 'primeng/datepicker';
 import { CheckboxModule } from 'primeng/checkbox';
 import { TextareaModule } from 'primeng/textarea';
+import { InputNumberModule } from 'primeng/inputnumber';
 import { FileUploadModule } from 'primeng/fileupload';
 import { CommonModule } from '@angular/common';
 
 @Component({
     selector: 'app-pmocs',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, InputTextModule, FluidModule, ButtonModule, SelectModule, DatePickerModule, CheckboxModule, TextareaModule, FileUploadModule],
+    imports: [CommonModule, ReactiveFormsModule, InputTextModule, FluidModule, ButtonModule, SelectModule, DatePickerModule, CheckboxModule, TextareaModule, FileUploadModule, InputNumberModule],
     template: `<p-fluid>
         <form [formGroup]="formulario" (ngSubmit)="enviar()" enctype="multipart/form-data" class="w-full">
             <div class="flex flex-col md:flex-row gap-8">
@@ -34,7 +35,7 @@ import { CommonModule } from '@angular/common';
                         <div class="grid grid-cols-12 gap-2">
                             <label for="dataManutencao" class="flex items-center col-span-12 mb-2 md:col-span-4 md:mb-0">Data da Manutenção</label>
                             <div class="col-span-12 md:col-span-8">
-                                <p-date-picker id="dataManutencao" formControlName="dataManutencao" dateFormat="dd/mm/yyyy" placeholder="dd/mm/aaaa"></p-date-picker>
+                                <p-date-picker id="dataManutencao" formControlName="dataManutencao" dateFormat="dd/MM/yyyy" placeholder="dd/mm/aaaa"></p-date-picker>
                             </div>
                         </div>
 
@@ -62,7 +63,7 @@ import { CommonModule } from '@angular/common';
                         <div class="grid grid-cols-12 gap-2">
                             <label for="proximaManutencao" class="flex items-center col-span-12 mb-2 md:col-span-4 md:mb-0">Previsão Próxima Manutenção</label>
                             <div class="col-span-12 md:col-span-8">
-                                <p-date-picker id="proximaManutencao" formControlName="proximaManutencao" dateFormat="dd/mm/yyyy" placeholder="dd/mm/aaaa"></p-date-picker>
+                              <p-date-picker id="proximaManutencao" formControlName="proximaManutencao" dateFormat="dd/MM/yyyy" placeholder="dd/mm/aaaa"></p-date-picker>
                             </div>
                         </div>
                     </div>
@@ -89,14 +90,9 @@ import { CommonModule } from '@angular/common';
                             <label for="observacoes">Observações | Problemas Encontrados</label>
                             <textarea id="observacoes" pInputTextarea formControlName="observacoes"></textarea>
                         </div>
-
                         <div class="flex flex-col gap-2">
                             <label for="fotos">Upload de Fotos | Evidências</label>
-                            <p-fileUpload id="fotos" name="fotos" url="URL_DO_BACKEND" [maxFileSize]="10000000" [multiple]="true" [auto]="true" chooseLabel="Upload"></p-fileUpload>
-                        </div>
-
-                        <div class="flex justify-end">
-                            <button pButton type="submit" label="Enviar"></button>
+                            <p-fileUpload id="fotos" name="fotos" url="URL_DO_BACKEND" [maxFileSize]="10000000" [multiple]="true" [auto]="true" chooseLabel="Selecionar"></p-fileUpload>
                         </div>
                     </div>
                 </div>
@@ -106,24 +102,50 @@ import { CommonModule } from '@angular/common';
                     <div class="font-semibold text-xl">Custos e Assinatura</div>
                     <div class="flex flex-col gap-2">
                         <label for="custos">Custos | Despesas</label>
-                        <textarea id="custos" pInputTextarea formControlName="custos"></textarea>
+                        <p-inputNumber id="custos" formControlName="custos" class="w-full" mode="currency" currency="BRL" locale="pt-BR" [min]="0"></p-inputNumber>
                     </div>
+
                     <div class="flex flex-col gap-2">
                         <label for="assinatura">Confirmação | Assinatura Digital *</label>
                         <p-select id="assinatura" class="w-full" [options]="assinaturaOptions" formControlName="assinatura" placeholder="Selecione confirmação"></p-select>
+                    </div>
+                    <div class="flex justify-end">
+                        <button pButton type="submit" label="Enviar"></button>
                     </div>
                 </div>
             </div>
         </form>
     </p-fluid>`,
-    styles: [`
-        :host ::ng-deep .p-fluid .p-field {
-            margin-bottom: 1.5rem;
-        }
-    `]
+    styles: [
+        `
+            :host ::ng-deep .p-fluid .p-field {
+                margin-bottom: 1.5rem;
+            }
+        `
+    ]
 })
 export class CriarPmoc {
     formulario: FormGroup;
+
+    // month name maps for normalization (english and portuguese)
+    private monthNames: Record<string, number> = {
+        janeiro: 1, fevereiro: 2, marco: 3, março: 3, abril: 4, maio: 5, junho: 6,
+        julho: 7, agosto: 8, setembro: 9, outubro: 10, novembro: 11, dezembro: 12,
+        january: 1, february: 2, march: 3, april: 4, may: 5, june: 6,
+        july: 7, august: 8, september: 9, october: 10, november: 11, december: 12
+    };
+
+    // pt-BR locale object for PrimeNG datepicker
+    ptBr = {
+        firstDayOfWeek: 0,
+        dayNames: ['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'],
+        dayNamesShort: ['dom','seg','ter','qua','qui','sex','sáb'],
+        dayNamesMin: ['D','S','T','Q','Q','S','S'],
+        monthNames: ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'],
+        monthNamesShort: ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'],
+        today: 'Hoje',
+        clear: 'Limpar'
+    };
 
     statusOptions = [
         { label: 'EM OPERAÇÃO', value: 'em_operacao' },
@@ -218,13 +240,87 @@ export class CriarPmoc {
             responsavel: ['', Validators.required],
             periodicidade: ['', Validators.required],
             proximaManutencao: [null],
-            custos: [''],
+            custos: [null, Validators.min(0)],
             assinatura: ['', Validators.required]
+        });
+
+        // Normalize date inputs: if user types or an external value is set as string,
+        // convert it to a Date so the datepicker shows correctly using the dateFormat.
+        const dm = this.formulario.get('dataManutencao');
+        const pm = this.formulario.get('proximaManutencao');
+
+        dm?.valueChanges.subscribe(v => {
+            const d = this.normalizeDate(v);
+            if (d && !(v instanceof Date)) {
+                dm.setValue(d, { emitEvent: false });
+            }
+        });
+
+        pm?.valueChanges.subscribe(v => {
+            const d = this.normalizeDate(v);
+            if (d && !(v instanceof Date)) {
+                pm.setValue(d, { emitEvent: false });
+            }
         });
     }
 
     enviar() {
-        console.log(this.formulario.value);
-        // Aqui você pode integrar com backend ou gerar PDF
+        const raw = this.formulario.value;
+
+        const dataMan = this.normalizeDate(raw.dataManutencao);
+        const proxima = this.normalizeDate(raw.proximaManutencao);
+
+        const payload = {
+            ...raw,
+            dataManutencao: dataMan ? this.formatDateToIso(dataMan) : null,
+            proximaManutencao: proxima ? this.formatDateToIso(proxima) : null
+        };
+
+        // Enviar payload ao backend ou gerar PDF. Datas em yyyy-MM-dd conforme solicitado.
+        console.log('payload para salvar:', payload);
+    }
+
+    // Helpers
+    private pad(n: number) { return n < 10 ? '0' + n : String(n); }
+
+    private formatDateToIso(d: Date): string {
+        // yyyy-MM-dd
+        return `${d.getFullYear()}-${this.pad(d.getMonth() + 1)}-${this.pad(d.getDate())}`;
+    }
+
+    private formatDateToDisplay(d: Date): string {
+        // dd/MM/yyyy (for reference, DatePicker displays according to dateFormat)
+        return `${this.pad(d.getDate())}/${this.pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+    }
+
+    private normalizeDate(value: any): Date | null {
+        if (!value && value !== 0) return null;
+        if (value instanceof Date) return value;
+        if (typeof value === 'number') return new Date(value);
+
+        let s = String(value).trim();
+
+        // Try dd/MM/yyyy or dd-MM-yyyy
+        const parts = s.split(/[\/\-]/);
+        if (parts.length >= 3) {
+            const day = parseInt(parts[0].replace(/\D/g, ''), 10);
+            const month = parseInt(parts[1].replace(/\D/g, ''), 10);
+            const year = parseInt(parts[2].replace(/\D/g, '').slice(0, 4), 10);
+            if (!isNaN(day) && !isNaN(month) && !isNaN(year)) return new Date(year, month - 1, day);
+        }
+
+        // Try pattern with month name, e.g. '16 October 2025' or '16/October/20252025'
+        const m = s.match(/(\d{1,2})[^\dA-Za-z]*([A-Za-zÀ-ÿ]+)[^\dA-Za-z]*(\d{4})/);
+        if (m) {
+            const day = parseInt(m[1], 10);
+            const monthName = m[2].toLowerCase();
+            const year = parseInt(m[3], 10);
+            const monthNum = this.monthNames[monthName];
+            if (!isNaN(day) && monthNum && !isNaN(year)) return new Date(year, monthNum - 1, day);
+        }
+
+        // Fallback: try Date constructor
+        const dt = new Date(s);
+        return isNaN(dt.getTime()) ? null : dt;
     }
 }

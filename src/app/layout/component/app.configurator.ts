@@ -422,6 +422,11 @@ export class AppConfigurator {
         }
         this.applyTheme(type, color);
 
+        // If primary changed, allow LayoutService to apply special overrides
+        if (type === 'primary') {
+            this.layoutService.applyPrimaryByName(color.name);
+        }
+
         event.stopPropagation();
     }
 

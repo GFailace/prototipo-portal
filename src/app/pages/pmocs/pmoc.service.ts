@@ -5,8 +5,8 @@ export interface Pmoc {
     id: string;
     cliente: string;
     equipamento: string;
-    dataManutencao: Date;
-    proximaManutencao?: Date | null;
+    dataManutencao: string;
+    proximaManutencao?: string | null;
     tipoManutencao: string;
     statusEquipamento: string;
     responsavel: string;
@@ -26,8 +26,8 @@ export class PmocService {
             id: 'PMOC-001',
             cliente: 'BHIO SUPPLY | ESTEIO - RS',
             equipamento: 'AC001 | RECEBIMENTO | 12.000 BTUS',
-            dataManutencao: new Date(2025, 9, 10), // month 9 = October
-            proximaManutencao: new Date(2025, 10, 10),
+            dataManutencao: '2025-10-10',
+            proximaManutencao: '2025-11-10',
             tipoManutencao: 'PMOC',
             statusEquipamento: 'EM OPERAÇÃO',
             responsavel: 'Pablo Pereira',
@@ -43,8 +43,8 @@ export class PmocService {
             id: 'PMOC-002',
             cliente: 'BHIO SUPPLY FILIAL | ESTEIO - RS',
             equipamento: 'AC005 | ARMAZÉM | 36.000 BTUS',
-            dataManutencao: new Date(2025, 8, 2),
-            proximaManutencao: new Date(2025, 11, 2),
+            dataManutencao: '2025-09-02',
+            proximaManutencao: '2025-12-02',
             tipoManutencao: 'PREVENTIVA',
             statusEquipamento: 'FORA DE OPERAÇÃO',
             responsavel: 'Pablo Pereira',
@@ -60,8 +60,8 @@ export class PmocService {
             id: 'PMOC-003',
             cliente: 'BHIO SUPPLY | CAMPO BOM - RS',
             equipamento: 'AC010 | SALA TI | 18.000 BTUS',
-            dataManutencao: new Date(2025, 7, 15),
-            proximaManutencao: new Date(2026, 1, 15),
+            dataManutencao: '2025-08-15',
+            proximaManutencao: '2026-02-15',
             tipoManutencao: 'CORRETIVA',
             statusEquipamento: 'EM OPERAÇÃO',
             responsavel: 'Pablo Pereira',

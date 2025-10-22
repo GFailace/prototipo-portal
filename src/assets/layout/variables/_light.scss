@@ -1,4 +1,9 @@
 :root {
+    /* Brand color tokens (light theme) - tuned to match the logo blue */
+    --p-primary-color: #0b5ed7; /* primary blue */
+    --p-primary-contrast-color: #ffffff;
+    --p-primary-hover: #084cb0;
+
     --surface-ground: var(--p-surface-100);
     --code-background: var(--p-surface-900);
     --code-color: var(--p-surface-200);

@@ -4,17 +4,20 @@ import { FluidModule } from 'primeng/fluid';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
-import { DatePickerModule } from 'primeng/datepicker';
+import { MultiSelectModule } from 'primeng/multiselect';
+// DatePicker removed: using plain text inputs instead
 import { CheckboxModule } from 'primeng/checkbox';
 import { TextareaModule } from 'primeng/textarea';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { FileUploadModule } from 'primeng/fileupload';
 import { CommonModule } from '@angular/common';
+import { DatepickerComponent } from '../../shared/datepicker/datepicker.component';
 
 @Component({
     selector: 'app-pmocs',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, InputTextModule, FluidModule, ButtonModule, SelectModule, DatePickerModule, CheckboxModule, TextareaModule, FileUploadModule, InputNumberModule],
+
+    imports: [CommonModule, ReactiveFormsModule, InputTextModule, DatepickerComponent, FluidModule, ButtonModule, SelectModule, MultiSelectModule, CheckboxModule, TextareaModule, FileUploadModule, InputNumberModule],
     template: `<p-fluid>
         <form [formGroup]="formulario" (ngSubmit)="enviar()" enctype="multipart/form-data" class="w-full">
             <div class="flex flex-col md:flex-row gap-8">
@@ -33,9 +36,9 @@ import { CommonModule } from '@angular/common';
                         </div>
 
                         <div class="grid grid-cols-12 gap-2">
-                            <label for="dataManutencao" class="flex items-center col-span-12 mb-2 md:col-span-4 md:mb-0">Data da Manutenção</label>
+                            <label for="dataManutencao" class="flex items-center col-span-12 md:col-span-4 md:mb-0">Data da Manutenção</label>
                             <div class="col-span-12 md:col-span-8">
-                                <p-date-picker id="dataManutencao" formControlName="dataManutencao" dateFormat="dd/MM/yyyy" placeholder="dd/mm/aaaa"></p-date-picker>
+                                <app-datepicker inputId="dataManutencao" formControlName="dataManutencao"></app-datepicker>
                             </div>
                         </div>
 
@@ -58,12 +61,12 @@ import { CommonModule } from '@angular/common';
                         </div>
                         <div class="flex flex-col gap-2">
                             <label for="periodicidade">Periodicidade da Manutenção *</label>
-                            <p-select id="periodicidade" class="w-full" [options]="periodicidadeOptions" formControlName="periodicidade" placeholder="Selecione a periodicidade"></p-select>
+                            <p-multiSelect id="periodicidade" class="w-full" [options]="periodicidadeOptions" formControlName="periodicidade" placeholder="Selecione a(s) periodicidade(s)" display="chip" [filter]="true"></p-multiSelect>
                         </div>
                         <div class="grid grid-cols-12 gap-2">
-                            <label for="proximaManutencao" class="flex items-center col-span-12 mb-2 md:col-span-4 md:mb-0">Previsão Próxima Manutenção</label>
+                            <label for="proximaManutencao" class="flex items-center col-span-12 md:col-span-4 md:mb-0">Previsão Próxima Manutenção</label>
                             <div class="col-span-12 md:col-span-8">
-                              <p-date-picker id="proximaManutencao" formControlName="proximaManutencao" dateFormat="dd/MM/yyyy" placeholder="dd/mm/aaaa"></p-date-picker>
+                                <app-datepicker inputId="proximaManutencao" formControlName="proximaManutencao"></app-datepicker>
                             </div>
                         </div>
                     </div>
@@ -126,23 +129,45 @@ import { CommonModule } from '@angular/common';
 })
 export class CriarPmoc {
     formulario: FormGroup;
+    // debug fields removed
 
     // month name maps for normalization (english and portuguese)
     private monthNames: Record<string, number> = {
-        janeiro: 1, fevereiro: 2, marco: 3, março: 3, abril: 4, maio: 5, junho: 6,
-        julho: 7, agosto: 8, setembro: 9, outubro: 10, novembro: 11, dezembro: 12,
-        january: 1, february: 2, march: 3, april: 4, may: 5, june: 6,
-        july: 7, august: 8, september: 9, october: 10, november: 11, december: 12
+        janeiro: 1,
+        fevereiro: 2,
+        marco: 3,
+        março: 3,
+        abril: 4,
+        maio: 5,
+        junho: 6,
+        julho: 7,
+        agosto: 8,
+        setembro: 9,
+        outubro: 10,
+        novembro: 11,
+        dezembro: 12,
+        january: 1,
+        february: 2,
+        march: 3,
+        april: 4,
+        may: 5,
+        june: 6,
+        july: 7,
+        august: 8,
+        september: 9,
+        october: 10,
+        november: 11,
+        december: 12
     };
 
     // pt-BR locale object for PrimeNG datepicker
     ptBr = {
         firstDayOfWeek: 0,
-        dayNames: ['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'],
-        dayNamesShort: ['dom','seg','ter','qua','qui','sex','sáb'],
-        dayNamesMin: ['D','S','T','Q','Q','S','S'],
-        monthNames: ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'],
-        monthNamesShort: ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'],
+        dayNames: ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'],
+        dayNamesShort: ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'],
+        dayNamesMin: ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'],
+        monthNames: ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'],
+        monthNamesShort: ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'],
         today: 'Hoje',
         clear: 'Limpar'
     };
@@ -238,7 +263,7 @@ export class CriarPmoc {
             checklistOutros: [''],
             observacoes: [''],
             responsavel: ['', Validators.required],
-            periodicidade: ['', Validators.required],
+            periodicidade: [[], Validators.required],
             proximaManutencao: [null],
             custos: [null, Validators.min(0)],
             assinatura: ['', Validators.required]
@@ -249,17 +274,24 @@ export class CriarPmoc {
         const dm = this.formulario.get('dataManutencao');
         const pm = this.formulario.get('proximaManutencao');
 
-        dm?.valueChanges.subscribe(v => {
+        dm?.valueChanges.subscribe((v) => {
             const d = this.normalizeDate(v);
-            if (d && !(v instanceof Date)) {
-                dm.setValue(d, { emitEvent: false });
+            if (d) {
+                // if current value is not a Date, or differs from normalized (different time), set normalized Date
+                const needSet = !(v instanceof Date) || (v instanceof Date && v.getTime() !== d.getTime());
+                if (needSet) {
+                    dm.setValue(d);
+                }
             }
         });
 
-        pm?.valueChanges.subscribe(v => {
+        pm?.valueChanges.subscribe((v) => {
             const d = this.normalizeDate(v);
-            if (d && !(v instanceof Date)) {
-                pm.setValue(d, { emitEvent: false });
+            if (d) {
+                const needSet = !(v instanceof Date) || (v instanceof Date && v.getTime() !== d.getTime());
+                if (needSet) {
+                    pm.setValue(d);
+                }
             }
         });
     }
@@ -277,11 +309,12 @@ export class CriarPmoc {
         };
 
         // Enviar payload ao backend ou gerar PDF. Datas em yyyy-MM-dd conforme solicitado.
-        console.log('payload para salvar:', payload);
     }
 
     // Helpers
-    private pad(n: number) { return n < 10 ? '0' + n : String(n); }
+    private pad(n: number) {
+        return n < 10 ? '0' + n : String(n);
+    }
 
     private formatDateToIso(d: Date): string {
         // yyyy-MM-dd
@@ -306,7 +339,11 @@ export class CriarPmoc {
             const day = parseInt(parts[0].replace(/\D/g, ''), 10);
             const month = parseInt(parts[1].replace(/\D/g, ''), 10);
             const year = parseInt(parts[2].replace(/\D/g, '').slice(0, 4), 10);
-            if (!isNaN(day) && !isNaN(month) && !isNaN(year)) return new Date(year, month - 1, day);
+            if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
+                const dt = new Date(year, month - 1, day);
+                dt.setHours(0, 0, 0, 0);
+                return dt;
+            }
         }
 
         // Try pattern with month name, e.g. '16 October 2025' or '16/October/20252025'
@@ -316,11 +353,19 @@ export class CriarPmoc {
             const monthName = m[2].toLowerCase();
             const year = parseInt(m[3], 10);
             const monthNum = this.monthNames[monthName];
-            if (!isNaN(day) && monthNum && !isNaN(year)) return new Date(year, monthNum - 1, day);
+            if (!isNaN(day) && monthNum && !isNaN(year)) {
+                const dt = new Date(year, monthNum - 1, day);
+                dt.setHours(0, 0, 0, 0);
+                return dt;
+            }
         }
 
         // Fallback: try Date constructor
         const dt = new Date(s);
-        return isNaN(dt.getTime()) ? null : dt;
+        if (isNaN(dt.getTime())) return null;
+        dt.setHours(0, 0, 0, 0);
+        return dt;
     }
+
+    // Note: manual DOM writes to the datepicker input were removed to avoid conflicts
 }

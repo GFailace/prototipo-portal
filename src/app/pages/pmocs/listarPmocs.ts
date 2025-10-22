@@ -3,7 +3,7 @@ import { FluidModule } from 'primeng/fluid';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
-import { DatePickerModule } from 'primeng/datepicker';
+// DatePicker removed
 import { CheckboxModule } from 'primeng/checkbox';
 import { FormsModule, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TextareaModule } from 'primeng/textarea';
@@ -31,191 +31,178 @@ const CHECKLIST_LABELS: Record<string, string> = {
 @Component({
     selector: 'app-pmocs-list',
     standalone: true,
-    imports: [CommonModule, InputTextModule, FluidModule, ButtonModule, SelectModule, FormsModule, ReactiveFormsModule, TextareaModule, TableModule, DatePickerModule, CheckboxModule, ToastModule, ConfirmDialogModule, InputNumberModule, FileUploadModule],
+    imports: [
+        CommonModule,
+        InputTextModule,
+        FluidModule,
+        ButtonModule,
+        SelectModule,
+        FormsModule,
+        ReactiveFormsModule,
+        TextareaModule,
+    TableModule,
+    CheckboxModule,
+        ToastModule,
+        ConfirmDialogModule,
+        InputNumberModule,
+        FileUploadModule
+    ],
     template: `<p-fluid>
         <p-toast></p-toast>
         <p-confirmDialog></p-confirmDialog>
         <div class="card">
-            <div class="flex items-center justify-between mb-4">
-                <div class="font-semibold text-2xl">Lista de PMOCs</div>
-                <p-button label="Novo PMOC" class="p-button-sm" (onClick)="goCreate()"></p-button>
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
+                <div class="font-semibold text-2xl break-words">Lista de PMOCs</div>
+                <p-button label="Novo PMOC" icon="pi pi-plus" iconPos="left" class="p-button-sm w-full sm:w-auto" (onClick)="goCreate()"></p-button>
             </div>
 
-            <p-table [value]="(pmocs$ | async) || []" class="p-datatable-sm">
-                <ng-template pTemplate="header">
-                    <tr>
-                        <th>ID</th>
-                        <th>Cliente</th>
-                        <th>Equipamento</th>
-                        <th>Data</th>
-                        <th>Responsável</th>
-                        <th>Ações</th>
-                    </tr>
-                </ng-template>
-                <ng-template pTemplate="body" let-p>
-                    <tr>
-                        <td>{{ p.id }}</td>
-                        <td>{{ p.cliente }}</td>
-                        <td>{{ p.equipamento }}</td>
-                        <td>{{ p.dataManutencao | date:'dd/mm/yyyy' }}</td>
-                        <td>{{ p.responsavel }}</td>
-                        <td>
-                            <p-button label="Ver detalhes" (onClick)="viewDetails(p)" class="p-button-text"></p-button>
-                            <p-button label="Excluir" (onClick)="deletePmoc(p.id)" class="p-button-text p-button-danger"></p-button>
-                        </td>
-                    </tr>
-                </ng-template>
-            </p-table>
+            <ng-container *ngIf="pmocs$ | async as pmocs">
+                <div class="flex flex-col gap-3">
+                    <div *ngFor="let p of pmocs" class="p-4 sm:p-4 rounded border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 shadow-sm sm:shadow-none">
+                        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                            <div>
+                                <div class="font-semibold text-lg sm:text-xl">{{ p.cliente }}</div>
+                                <div class="text-sm sm:text-base text-muted-color">{{ p.equipamento }}</div>
+                                <div class="text-sm mt-1">Status: {{ p.statusEquipamento || '-' }}</div>
+                            </div>
+                            <div class="text-sm sm:text-xs text-muted-color mt-2 sm:mt-0">{{ p.dataManutencao | date: 'dd/MM/yyyy' }}</div>
+                        </div>
 
-            <div *ngIf="selectedPmoc" class="mt-6">
-                <div class="card p-4 border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900">
-                    <div class="flex items-center justify-between">
-                        <div class="font-semibold text-xl">Detalhes — {{ selectedPmoc.id }}</div>
-                        <div class="flex gap-2">
-                            <p-button label="Exportar (Imprimir)" (onClick)="exportToPrint()" class="p-button-text"></p-button>
-                            <p-button label="Download PDF" (onClick)="downloadPdf()" class="p-button-text"></p-button>
-                            <p-button label="Editar" (onClick)="toggleEdit()" class="p-button-text"></p-button>
-                            <p-button label="Fechar" (onClick)="closeDetails()" class="p-button-text"></p-button>
+                        <div class="mt-3 flex items-center justify-between">
+                            <div class="text-sm">Responsável: {{ p.responsavel }}</div>
+                        </div>
+                        <div class="mt-3 flex flex-col sm:flex-row items-center gap-2 justify-start sm:mt-0 sm:justify-end">
+                            <p-button label="Detalhes" class="w-full sm:w-auto p-button-text" (onClick)="toggleExpand(p, $event)"></p-button>
+                            <p-button label="Excluir" class="w-full sm:w-auto p-button-text p-button-danger" (onClick)="deletePmoc(p.id)"></p-button>
+                        </div>
+
+                        <div class="expand-panel mt-4 overflow-hidden" [class.open]="expandedPmocId === p.id">
+                            <div class="pt-4">
+                                <div class="flex items-center justify-between">
+                                    <div class="font-semibold text-xl">Detalhes — {{ p.id }}</div>
+                                </div>
+
+                                <div class="p-4 rounded border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 mt-4">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <h3 class="font-medium mb-3">Informações Gerais</h3>
+                                            <div class="mb-2"><strong>Cliente:</strong> {{ p.cliente }}</div>
+                                            <div class="mb-2"><strong>Equipamento:</strong> {{ p.equipamento }}</div>
+                                            <div class="mb-2"><strong>Data:</strong> {{ p.dataManutencao | date: 'dd/MM/yyyy' }}</div>
+                                            <div class="mb-2"><strong>Próxima Manutenção:</strong> {{ p.proximaManutencao ? (p.proximaManutencao | date: 'dd/MM/yyyy') : '-' }}</div>
+                                            <div class="mb-2"><strong>Tipo:</strong> {{ p.tipoManutencao }}</div>
+                                            <div class="mb-2"><strong>Status:</strong> {{ p.statusEquipamento }}</div>
+                                            <div class="mb-2"><strong>Responsável:</strong> {{ p.responsavel }}</div>
+                                            <div class="mb-2"><strong>Periodicidade:</strong> {{ p.periodicidade }}</div>
+                                            <div class="whitespace-pre-wrap mb-3"><strong>Observações:</strong> {{ p.observacoes || '-' }}</div>
+                                            <div class="mb-3"><strong>Custos:</strong> {{ p.custos || '-' }}</div>
+                                            <div class="mb-3"><strong>Checklist - Outros:</strong> {{ p.checklistOutros || '-' }}</div>
+                                        </div>
+
+                                        <div>
+                                            <div class="mt-2">
+                                                <h4 class="font-medium mb-2">Checklist</h4>
+                                                <ul class="list-disc ml-6 mt-2">
+                                                    <ng-container *ngFor="let item of checklist">
+                                                        <li *ngIf="p?.checklist && p.checklist[item.controlName]" class="text-base leading-6 mb-1">{{ item.label }}</li>
+                                                    </ng-container>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="flex action-row justify-start gap-2 mt-4">
+                                    <p-button label="Exportar" icon="pi pi-print" iconPos="left" (onClick)="exportToPrintFor(p)" styleClass="p-button-sm p-button-outlined action-btn"></p-button>
+                                    <p-button label="Download" icon="pi pi-download" iconPos="left" (onClick)="downloadPdfFor(p)" styleClass="p-button-sm p-button-outlined action-btn"></p-button>
+                                    <p-button label="Editar" icon="pi pi-pencil" iconPos="left" (onClick)="goEdit(p.id, $event)" styleClass="p-button-sm p-button-outlined action-btn"></p-button>
+                                    <p-button label="Fechar" icon="pi pi-times" iconPos="left" (onClick)="closeExpand()" styleClass="p-button-sm p-button-text action-btn"></p-button>
+                                </div>
+                            </div>
                         </div>
                     </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                        <ng-container *ngIf="!editMode">
-                            <div class="p-4 rounded border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900">
-                                <h3 class="font-medium mb-3">Informações Gerais</h3>
-                                <div><strong>Cliente:</strong> {{ selectedPmoc.cliente }}</div>
-                                <div><strong>Equipamento:</strong> {{ selectedPmoc.equipamento }}</div>
-                                <div><strong>Data:</strong> {{ selectedPmoc.dataManutencao | date:'dd/MM/yyyy' }}</div>
-                                <div><strong>Próxima Manutenção:</strong> {{ selectedPmoc.proximaManutencao ? (selectedPmoc.proximaManutencao | date:'dd/MM/yyyy') : '-' }}</div>
-                                <div><strong>Tipo:</strong> {{ selectedPmoc.tipoManutencao }}</div>
-                                <div><strong>Status:</strong> {{ selectedPmoc.statusEquipamento }}</div>
-                                <div><strong>Responsável:</strong> {{ selectedPmoc.responsavel }}</div>
-                                <div><strong>Periodicidade:</strong> {{ selectedPmoc.periodicidade }}</div>
-                            </div>
-
-                            <div class="p-4 rounded border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900">
-                                <h3 class="font-medium mb-3">Observações e Custos</h3>
-                                <div class="whitespace-pre-wrap">{{ selectedPmoc.observacoes || '-' }}</div>
-                                <div class="mt-3"><strong>Custos:</strong> {{ selectedPmoc.custos || '-' }}</div>
-                                <div class="mt-3"><strong>Checklist - Outros:</strong> {{ selectedPmoc.checklistOutros || '-' }}</div>
-
-                                <div class="mt-4">
-                                    <h4 class="font-medium">Checklist</h4>
-                                    <ul class="list-disc ml-6 mt-2">
-                                        <ng-container *ngFor="let item of checklist">
-                                            <li *ngIf="selectedPmoc?.checklist && selectedPmoc.checklist[item.controlName]">{{ item.label }}</li>
-                                        </ng-container>
-                                    </ul>
-                                </div>
-                            </div>
-                        </ng-container>
-
-                        <form *ngIf="editMode" [formGroup]="editForm" (ngSubmit)="saveEdit()" class="w-full col-span-1 md:col-span-2">
-                            <div class="flex flex-col md:flex-row gap-8 w-full">
-                                <div class="flex-1">
-                                    <div class="p-4 rounded border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900">
-                                        <div class="font-semibold text-xl mb-3">PMOC — Editar</div>
-
-                                        <div class="flex flex-col gap-3">
-                                            <label class="mt-2 block">Cliente | Empresa *</label>
-                                            <p-select class="w-full" [options]="clienteOptions" formControlName="cliente" placeholder="Selecione"></p-select>
-                                        </div>
-
-                                        <div class="flex flex-col gap-3">
-                                            <label class="mt-2 block">ID Equipamento | Setor | Capacidade *</label>
-                                            <p-select class="w-full" [options]="equipamentoOptions" formControlName="equipamento" placeholder="Selecione o equipamento"></p-select>
-                                        </div>
-
-                                        <div class="grid grid-cols-12 gap-3">
-                                            <label class="flex items-center col-span-12 mt-2 md:col-span-4 md:mb-0">Data da Manutenção</label>
-                                            <div class="col-span-12 md:col-span-8">
-                                                <p-date-picker formControlName="dataManutencao" dateFormat="dd/MM/yyyy" placeholder="dd/mm/aaaa"></p-date-picker>
-                                            </div>
-                                        </div>
-
-                                        <div class="flex flex-col gap-3 mt-3">
-                                            <label class="mt-2 block">Tipo de Manutenção *</label>
-                                            <p-select class="w-full" [options]="tipoManutencaoOptions" formControlName="tipoManutencao" placeholder="Selecione o tipo"></p-select>
-                                        </div>
-
-                                        <div class="flex flex-col gap-3 mt-3">
-                                            <label class="mt-2 block">Status do Equipamento *</label>
-                                            <p-select class="w-full" [options]="statusOptions" formControlName="statusEquipamento" placeholder="Selecione"></p-select>
-                                        </div>
-                                    </div>
-
-                                    <div class="p-4 rounded border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 mt-4">
-                                        <div class="font-semibold text-xl mb-3">Responsável e Periodicidade</div>
-                                        <div class="flex flex-col gap-3">
-                                            <label class="mt-2 block">Responsável pelo Atendimento Técnico *</label>
-                                            <input pInputText formControlName="responsavel" />
-                                        </div>
-                                        <div class="flex flex-col gap-3">
-                                            <label class="mt-2 block">Periodicidade da Manutenção *</label>
-                                            <p-select class="w-full" [options]="periodicidadeOptions" formControlName="periodicidade" placeholder="Selecione a periodicidade"></p-select>
-                                        </div>
-
-                                        <div class="grid grid-cols-12 gap-2 mt-2">
-                                            <label class="flex items-center col-span-12 mt-2 md:col-span-4 md:mb-0">Previsão Próxima Manutenção</label>
-                                            <div class="col-span-12 md:col-span-8">
-                                                <p-date-picker formControlName="proximaManutencao" dateFormat="dd/MM/yyyy" placeholder="dd/mm/aaaa"></p-date-picker>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="flex-1">
-                                    <div class="p-4 rounded border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900">
-                                        <div class="font-semibold text-xl mb-3">Checklist de Inspeção</div>
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                            <div *ngFor="let item of checklist" class="flex items-center gap-2">
-                                                <p-checkbox binary="true" [formControlName]="item.controlName"></p-checkbox>
-                                                <span class="text-sm">{{ item.label }}</span>
-                                            </div>
-                                        </div>
-                                        <div class="flex flex-col gap-3 mt-3">
-                                            <label class="mt-2 block">Outros</label>
-                                            <textarea pInputTextarea formControlName="checklistOutros" placeholder="Outros..."></textarea>
-                                        </div>
-                                    </div>
-
-                                    <div class="p-4 rounded border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 mt-4">
-                                        <div class="font-semibold text-xl mb-3">Observações e Evidências</div>
-                                        <div class="flex flex-col gap-3">
-                                            <label class="mt-2 block">Observações | Problemas Encontrados</label>
-                                            <textarea pInputTextarea formControlName="observacoes"></textarea>
-                                        </div>
-
-                                        <div class="flex flex-col gap-3 mt-3">
-                                            <label class="mt-2 block">Upload de Fotos | Evidências</label>
-                                            <p-fileUpload id="fotos" name="fotos" url="URL_DO_BACKEND" [maxFileSize]="10000000" [multiple]="true" [auto]="true" chooseLabel="Selecionar"></p-fileUpload>
-                                        </div>
-
-                                        <div class="flex flex-col gap-3 mt-3">
-                                            <label class="mt-2 block">Custos | Despesas</label>
-                                            <p-inputNumber formControlName="custos" mode="currency" currency="BRL" locale="pt-BR" [min]="0"></p-inputNumber>
-                                        </div>
-
-                                        <div class="flex justify-end gap-2 mt-4">
-                                            <p-button label="Salvar" (onClick)="saveEdit()" class="p-button-plain"></p-button>
-                                            <p-button label="Cancelar" (onClick)="toggleEdit(false)" class="p-button-plain"></p-button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
                 </div>
-            </div>
+            </ng-container>
         </div>
     </p-fluid>`,
     styles: [
-        `:host ::ng-deep .pmoc-fileupload .p-fileupload-upload, :host ::ng-deep .pmoc-fileupload .p-fileupload-cancel { display: none !important; }`
+        `
+            :host ::ng-deep .pmoc-fileupload .p-fileupload-upload,
+            :host ::ng-deep .pmoc-fileupload .p-fileupload-cancel {
+                display: none !important;
+            }
+            :host ::ng-deep .expand-panel {
+                transition:
+                    max-height 300ms ease,
+                    opacity 200ms ease;
+                max-height: 0;
+                opacity: 0;
+            }
+            :host ::ng-deep .expand-panel.open {
+                max-height: 1200px;
+                opacity: 1;
+            }
+            :host ::ng-deep .expand-panel .p-button {
+                margin-left: 6px;
+            }
+            /* Action row responsive behaviour */
+            :host ::ng-deep .action-row {
+                display: flex;
+                gap: 0.5rem;
+                flex-wrap: wrap;
+                align-items: center;
+            }
+            :host ::ng-deep .action-row .p-button {
+                min-width: 2.75rem;
+                border-radius: 0.375rem;
+            }
+            :host ::ng-deep .action-row .action-btn.p-button-outlined {
+                border-color: rgba(0, 0, 0, 0.08);
+            }
+            :host ::ng-deep .action-row .action-btn.p-button-primary {
+                background: var(--primary-color);
+                border-color: var(--primary-color);
+                color: #fff;
+            }
+            /* Responsive: on small screens hide labels and show only icons */
+            @media (max-width: 640px) {
+                /* keep labels visible on small screens, adjust spacing and wrap */
+                :host ::ng-deep .expand-panel .p-button .p-button-label,
+                :host ::ng-deep .card .p-button .p-button-label {
+                    display: inline-block !important;
+                }
+                :host ::ng-deep .expand-panel .p-button,
+                :host ::ng-deep .card .p-button {
+                    padding: 0.4rem 0.6rem !important;
+                    font-size: 0.85rem !important;
+                }
+                :host ::ng-deep .expand-panel.open {
+                    max-height: 1600px;
+                }
+                /* On very small screens wrap action buttons into two columns */
+                :host ::ng-deep .action-row {
+                    display: grid !important;
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: 0.5rem !important;
+                }
+                :host ::ng-deep .action-row .p-button {
+                    width: 100% !important;
+                    justify-content: flex-start;
+                }
+                /* Very small screens: stack vertically */
+                @media (max-width: 380px) {
+                    :host ::ng-deep .action-row {
+                        grid-template-columns: 1fr !important;
+                    }
+                }
+            }
+        `
     ]
 })
 export class ListarPmocs {
     pmocs$: Observable<Pmoc[]>;
     selectedPmoc: Pmoc | null = null;
+    expandedPmocId: string | null = null;
     editMode = false;
     editForm!: FormGroup;
 
@@ -295,7 +282,13 @@ export class ListarPmocs {
         { label: 'Verificação da bomba de condensados', controlName: 'chk17' }
     ];
 
-    constructor(private pmocService: PmocService, private fb: FormBuilder, private msg: MessageService, private confirm: ConfirmationService, private router: Router) {
+    constructor(
+        private pmocService: PmocService,
+        private fb: FormBuilder,
+        private msg: MessageService,
+        private confirm: ConfirmationService,
+        private router: Router
+    ) {
         this.pmocs$ = this.pmocService.pmocs$;
 
         // build edit form with checklist controls
@@ -320,9 +313,32 @@ export class ListarPmocs {
         });
     }
 
+    goEdit(id?: string | null, evt?: Event) {
+    if (evt && typeof evt.stopPropagation === 'function') evt.stopPropagation();
+        if (!id) return;
+        this.router.navigateByUrl(`/pages/pmocs/editar/${id}`).catch((err) => console.error('Navigation failed', err));
+    }
+
     viewDetails(p: Pmoc) {
         this.selectedPmoc = { ...p };
         this.editMode = false;
+    }
+
+    toggleExpand(p: Pmoc, evt?: Event) {
+        if (evt && typeof (evt as any).stopPropagation === 'function') (evt as any).stopPropagation();
+        if (!p) return;
+        if (this.expandedPmocId === p.id) {
+            this.expandedPmocId = null;
+            this.selectedPmoc = null;
+        } else {
+            this.expandedPmocId = p.id;
+            this.selectedPmoc = { ...p };
+        }
+    }
+
+    closeExpand() {
+        this.expandedPmocId = null;
+        this.selectedPmoc = null;
     }
 
     closeDetails() {
@@ -359,7 +375,7 @@ export class ListarPmocs {
 
     goCreate() {
         // navigate to the registrar route
-        this.router.navigate(['/pmocs/registrar-pmoc']);
+        this.router.navigate(['/pages/pmocs/registrar-pmoc']);
     }
 
     toggleEdit(force?: boolean) {
@@ -397,16 +413,16 @@ export class ListarPmocs {
             checklistObj[item.controlName] = !!formValue[item.controlName];
         }
 
-        // Ensure date fields are Date objects
-        const dataManutencao = formValue.dataManutencao ? new Date(formValue.dataManutencao) : null;
-        const proximaManutencao = formValue.proximaManutencao ? new Date(formValue.proximaManutencao) : null;
+    // Ensure date fields are Date objects and convert to ISO strings for the service (use iso-safe parser)
+    const dataManutencao = formValue.dataManutencao ? this.parseDateFromIso(formValue.dataManutencao) : null;
+    const proximaManutencao = formValue.proximaManutencao ? this.parseDateFromIso(formValue.proximaManutencao) : null;
 
         const updated: Pmoc = {
             ...this.selectedPmoc,
             cliente: formValue.cliente,
             equipamento: formValue.equipamento,
-            dataManutencao: dataManutencao as any,
-            proximaManutencao: proximaManutencao as any,
+            dataManutencao: dataManutencao ? this.formatDateToIso(dataManutencao) as any : undefined,
+            proximaManutencao: proximaManutencao ? this.formatDateToIso(proximaManutencao) as any : undefined,
             tipoManutencao: formValue.tipoManutencao,
             statusEquipamento: formValue.statusEquipamento,
             responsavel: formValue.responsavel,
@@ -445,7 +461,7 @@ export class ListarPmocs {
         const name = event.file.name;
         // remove by matching filename or data URL substring if present
         if (!this.selectedPmoc.fotos) return;
-        this.selectedPmoc.fotos = this.selectedPmoc.fotos.filter(src => !src.includes(name));
+        this.selectedPmoc.fotos = this.selectedPmoc.fotos.filter((src) => !src.includes(name));
     }
 
     private readFileAsDataUrl(file: File): Promise<string | ArrayBuffer | null> {
@@ -486,7 +502,14 @@ export class ListarPmocs {
 
     private formatCurrencyBRL(value: any): string {
         if (value === null || value === undefined || value === '') return '';
-        const num = typeof value === 'number' ? value : parseFloat(String(value).replace(/[^0-9-,.]/g, '').replace(',', '.'));
+        const num =
+            typeof value === 'number'
+                ? value
+                : parseFloat(
+                      String(value)
+                          .replace(/[^0-9-,.]/g, '')
+                          .replace(',', '.')
+                  );
         if (isNaN(num)) return '';
         return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(num);
     }
@@ -494,9 +517,35 @@ export class ListarPmocs {
     private parseCurrencyToNumber(value: any): number | null {
         if (value === null || value === undefined || value === '') return null;
         if (typeof value === 'number') return value;
-        const cleaned = String(value).replace(/\s/g, '').replace(/R\$|\$/g, '').replace(/\./g, '').replace(/,/g, '.');
+        const cleaned = String(value)
+            .replace(/\s/g, '')
+            .replace(/R\$|\$/g, '')
+            .replace(/\./g, '')
+            .replace(/,/g, '.');
         const n = parseFloat(cleaned);
         return isNaN(n) ? null : n;
+    }
+
+    private pad(n: number) { return n < 10 ? '0' + n : String(n); }
+
+    private formatDateToIso(d: Date): string {
+        return `${d.getFullYear()}-${this.pad(d.getMonth() + 1)}-${this.pad(d.getDate())}`;
+    }
+
+    private parseDateFromIso(value: any): Date {
+        if (!value) return new Date(NaN);
+        if (value instanceof Date) return new Date(value.getFullYear(), value.getMonth(), value.getDate());
+        const s = String(value).trim();
+        const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (m) {
+            const y = parseInt(m[1], 10);
+            const mo = parseInt(m[2], 10);
+            const d = parseInt(m[3], 10);
+            return new Date(y, mo - 1, d);
+        }
+        const dt = new Date(s);
+        if (isNaN(dt.getTime())) return new Date(NaN);
+        return new Date(dt.getFullYear(), dt.getMonth(), dt.getDate());
     }
 
     private normalizeDateValue(value: any): Date | null {
@@ -516,7 +565,7 @@ export class ListarPmocs {
                 let month = parts[1].replace(/\D/g, '');
                 let year = parts[2].replace(/\D/g, '');
 
-                // If year looks duplicated (e.g. '20252025'), take the first 4 digits
+                // If year looks duplicated (e.g. '20252025' or '202520252025'), take the first 4 digits
                 if (year.length > 4) year = year.slice(0, 4);
 
                 const d = parseInt(day, 10);
@@ -528,7 +577,8 @@ export class ListarPmocs {
             }
 
             // Fallback: try Date constructor
-            const dt = new Date(value);
+            // Fallback: try parsing flexible ISO or other formats using parseDateFromIso
+            const dt = this.parseDateFromIso(value);
             if (!isNaN(dt.getTime())) return dt;
         }
 
@@ -549,7 +599,46 @@ export class ListarPmocs {
             )
             .join('');
 
-        const html = `
+        const html = this.buildExportHtml(p, checklistHtml);
+
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) return;
+        printWindow.document.write(html);
+        printWindow.document.close();
+        // allow styles to load
+        setTimeout(() => printWindow.print(), 300);
+    }
+
+    // Wrapper that sets selectedPmoc and delegates to exportToPrint
+    exportToPrintFor(p: Pmoc) {
+        this.selectedPmoc = { ...p };
+        this.expandedPmocId = p.id;
+        this.exportToPrint();
+    }
+
+    // Wrapper that sets selectedPmoc and delegates to downloadPdf
+    downloadPdfFor(p: Pmoc) {
+        this.selectedPmoc = { ...p };
+        this.expandedPmocId = p.id;
+        // call async method but don't await here (UI action)
+        void this.downloadPdf();
+    }
+
+    private buildExportHtml(p: Pmoc, checklistHtml?: string) {
+        const checklist =
+            checklistHtml ??
+            this.checklistKeys(p)
+                .map(
+                    (k) => `
+            <tr>
+                <td style="padding:6px 12px;border:1px solid #e5e7eb;">${this.getChecklistLabel(k)}</td>
+                <td style="padding:6px 12px;border:1px solid #e5e7eb;">${p.checklist[k] ? 'OK' : 'NÃO'}</td>
+            </tr>
+        `
+                )
+                .join('');
+
+        return `
             <html>
             <head>
                 <title>PMOC - ${p.id}</title>
@@ -569,8 +658,8 @@ export class ListarPmocs {
                         <div style="color:#6b7280">Cliente: ${p.cliente}</div>
                     </div>
                     <div style="text-align:right">
-                        <div style="font-weight:600">${p.responsavel}</div>
-                        <div style="color:#6b7280">${new Intl.DateTimeFormat('pt-BR').format(new Date(p.dataManutencao))}</div>
+                        <div style="font-weight:600">Responsável Técnico: ${p.responsavel}</div>
+                        <div style="color:#6b7280">${new Intl.DateTimeFormat('pt-BR').format(this.parseDateFromIso(p.dataManutencao))}</div>
                     </div>
                 </div>
 
@@ -581,7 +670,7 @@ export class ListarPmocs {
                         <tr><td>Tipo</td><td>${p.tipoManutencao}</td></tr>
                         <tr><td>Status</td><td>${p.statusEquipamento}</td></tr>
                         <tr><td>Periodicidade</td><td>${p.periodicidade}</td></tr>
-                        <tr><td>Próxima Manutenção</td><td>${p.proximaManutencao ? new Intl.DateTimeFormat('pt-BR').format(new Date(p.proximaManutencao)) : '-'}</td></tr>
+                        <tr><td>Próxima Manutenção</td><td>${p.proximaManutencao ? new Intl.DateTimeFormat('pt-BR').format(this.parseDateFromIso(p.proximaManutencao)) : '-'}</td></tr>
                         <tr><td>Custos</td><td>${p.custos || '-'}</td></tr>
                     </table>
                 </div>
@@ -599,7 +688,7 @@ export class ListarPmocs {
                     <h3 style="margin:0 0 8px 0">Checklist</h3>
                     <table>
                         <tr><th>Item</th><th>Resultado</th></tr>
-                        ${checklistHtml}
+                        ${checklist}
                     </table>
                 </div>
 
@@ -609,13 +698,6 @@ export class ListarPmocs {
             </body>
             </html>
         `;
-
-        const printWindow = window.open('', '_blank');
-        if (!printWindow) return;
-        printWindow.document.write(html);
-        printWindow.document.close();
-        // allow styles to load
-        setTimeout(() => printWindow.print(), 300);
     }
 
     async downloadPdf() {
@@ -640,8 +722,8 @@ export class ListarPmocs {
                         <div style="color:#6b7280">Cliente: ${p.cliente}</div>
                     </div>
                     <div style="text-align:right">
-                        <div style="font-weight:600">${p.responsavel}</div>
-                        <div style="color:#6b7280">${new Intl.DateTimeFormat('pt-BR').format(new Date(p.dataManutencao))}</div>
+                        <div style="font-weight:600">Responsável Técnico: ${p.responsavel}</div>
+                        <div style="color:#6b7280">${new Intl.DateTimeFormat('pt-BR').format(this.parseDateFromIso(p.dataManutencao))}</div>
                     </div>
                 </div>
 
@@ -652,7 +734,7 @@ export class ListarPmocs {
                         <tr><td style="padding:8px;border-top:1px solid #e5e7eb">Tipo</td><td style="padding:8px;border-top:1px solid #e5e7eb">${p.tipoManutencao}</td></tr>
                         <tr><td style="padding:8px;border-top:1px solid #e5e7eb">Status</td><td style="padding:8px;border-top:1px solid #e5e7eb">${p.statusEquipamento}</td></tr>
                         <tr><td style="padding:8px;border-top:1px solid #e5e7eb">Periodicidade</td><td style="padding:8px;border-top:1px solid #e5e7eb">${p.periodicidade}</td></tr>
-                        <tr><td style="padding:8px;border-top:1px solid #e5e7eb">Próxima Manutenção</td><td style="padding:8px;border-top:1px solid #e5e7eb">${p.proximaManutencao ? new Intl.DateTimeFormat('pt-BR').format(new Date(p.proximaManutencao)) : '-'}</td></tr>
+                        <tr><td style="padding:8px;border-top:1px solid #e5e7eb">Próxima Manutenção</td><td style="padding:8px;border-top:1px solid #e5e7eb">${p.proximaManutencao ? new Intl.DateTimeFormat('pt-BR').format(this.parseDateFromIso(p.proximaManutencao)) : '-'}</td></tr>
                         <tr><td style="padding:8px;border-top:1px solid #e5e7eb">Custos</td><td style="padding:8px;border-top:1px solid #e5e7eb">${p.custos || '-'}</td></tr>
                         <tr><td style="padding:8px;border-top:1px solid #e5e7eb">Assinatura</td><td style="padding:8px;border-top:1px solid #e5e7eb">${this.getAssinaturaLabel(p.assinatura)}</td></tr>
                     </table>

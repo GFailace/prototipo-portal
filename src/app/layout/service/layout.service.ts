@@ -28,7 +28,8 @@ interface MenuChangeEvent {
 export class LayoutService {
     _config: layoutConfig = {
         preset: 'Aura',
-        primary: 'emerald',
+        // default primary set to 'orange' on startup
+        primary: 'orange',
         surface: null,
         darkTheme: false,
         menuMode: 'static'
@@ -76,6 +77,9 @@ export class LayoutService {
 
     transitionComplete = signal<boolean>(false);
 
+    /** Controls whether the configurator panel is visible */
+    configuratorVisible = signal<boolean>(false);
+
     private initialized = false;
 
     constructor() {
@@ -96,6 +100,13 @@ export class LayoutService {
 
             this.handleDarkModeTransition(config);
         });
+
+        // apply the initial primary override silently at startup
+        try {
+            this.applyPrimaryByName(this.layoutConfig().primary || '');
+        } catch (e) {
+            // ignore non-browser environments or early DOM errors
+        }
     }
 
     private handleDarkModeTransition(config: layoutConfig): void {
@@ -174,5 +185,48 @@ export class LayoutService {
 
     reset() {
         this.resetSource.next(true);
+    }
+
+    showConfigurator() {
+        this.configuratorVisible.set(true);
+    }
+
+    hideConfigurator() {
+        this.configuratorVisible.set(false);
+    }
+
+    toggleConfigurator() {
+        this.configuratorVisible.update((v) => !v);
+    }
+
+    /**
+     * Apply a primary color by name. For the special 'noir' value we set
+     * CSS variables to make buttons/links use black. For other names we
+     * remove the manual override so the theme system controls primary color.
+     */
+    applyPrimaryByName(name: string) {
+        if (name === 'noir') {
+            document.documentElement.style.setProperty('--primary-color', '#000000');
+            document.documentElement.style.setProperty('--p-primary-color', '#000000');
+            document.documentElement.style.setProperty('--p-primary-600', '#000000');
+            document.documentElement.style.setProperty('--p-primary-500', '#000000');
+            document.documentElement.style.setProperty('--p-primary-hover', '#222222');
+            document.documentElement.style.setProperty('--p-primary-contrast-color', '#ffffff');
+        } else if (name === 'orange') {
+            // orange brand tone
+            document.documentElement.style.setProperty('--primary-color', '#ff6a00');
+            document.documentElement.style.setProperty('--p-primary-color', '#ff6a00');
+            document.documentElement.style.setProperty('--p-primary-600', '#e65a00');
+            document.documentElement.style.setProperty('--p-primary-500', '#ff6a00');
+            document.documentElement.style.setProperty('--p-primary-hover', '#cc5600');
+            document.documentElement.style.setProperty('--p-primary-contrast-color', '#ffffff');
+        } else {
+            document.documentElement.style.removeProperty('--primary-color');
+            document.documentElement.style.removeProperty('--p-primary-color');
+            document.documentElement.style.removeProperty('--p-primary-600');
+            document.documentElement.style.removeProperty('--p-primary-500');
+            document.documentElement.style.removeProperty('--p-primary-hover');
+            document.documentElement.style.removeProperty('--p-primary-contrast-color');
+        }
     }
 }

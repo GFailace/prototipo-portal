@@ -4,6 +4,8 @@ import { Dashboard } from './app/pages/dashboard/dashboard';
 import { Documentation } from './app/pages/documentation/documentation';
 import { Landing } from './app/pages/landing/landing';
 import { Notfound } from './app/pages/notfound/notfound';
+import { ClientLayout } from './app/layout/component/client.layout';
+import { ClientAuthGuard } from './app/layout/service/client-auth.guard';
 
 export const appRoutes: Routes = [
     {
@@ -17,6 +19,15 @@ export const appRoutes: Routes = [
         ]
     },
     { path: 'landing', component: Landing },
+    {
+        path: 'client',
+        component: ClientLayout,
+        canActivate: [ClientAuthGuard],
+        children: [
+            { path: 'pmocs', loadComponent: () => import('./app/client/pmoc-client/pmoc-client.component').then(m => m.PmocClientComponent) },
+            { path: '', redirectTo: 'pmocs', pathMatch: 'full' }
+        ]
+    },
     { path: 'notfound', component: Notfound },
     { path: 'auth', loadChildren: () => import('./app/pages/auth/auth.routes') },
     { path: '**', redirectTo: '/notfound' }

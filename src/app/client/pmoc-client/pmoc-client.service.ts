@@ -4,10 +4,14 @@ export interface PmocSummary {
     id: string;
     cliente: string;
     equipamento: string;
+    // clientId (UUID/hash) to associate PMOCs to a specific cliente record
+    clientId?: string;
     dataManutencao?: string; // ISO yyyy-MM-dd
     proximaManutencao?: string;
     tipoManutencao?: string;
     status: 'pending' | 'approved';
+    // equipment operational status used in create form: 'em_operacao' | 'fora_de_operacao'
+    statusEquipamento?: 'em_operacao' | 'fora_de_operacao' | string;
     responsavel?: string;
     periodicidade?: string[];
     observacoes?: string;
@@ -28,6 +32,7 @@ export class PmocClientService {
             proximaManutencao: '2026-04-01',
             tipoManutencao: 'PMOC',
             status: 'pending',
+            statusEquipamento: 'em_operacao',
             responsavel: 'Técnico A',
             periodicidade: ['MENSAL'],
             observacoes: 'Filtro com acumulo de poeira, recomendado troca.',
@@ -46,6 +51,7 @@ export class PmocClientService {
             proximaManutencao: '2026-03-10',
             tipoManutencao: 'PREVENTIVA',
             status: 'approved',
+            statusEquipamento: 'em_operacao',
             responsavel: 'Técnico B',
             periodicidade: ['ANUAL'],
             observacoes: 'Sem intercorrências.',
@@ -63,6 +69,7 @@ export class PmocClientService {
             proximaManutencao: '2026-05-15',
             tipoManutencao: 'CORRETIVA',
             status: 'pending',
+            statusEquipamento: 'fora_de_operacao',
             responsavel: 'Técnico C',
             periodicidade: ['SEMESTRAL'],
             observacoes: '',
@@ -81,6 +88,7 @@ export class PmocClientService {
             proximaManutencao: (() => { const d = new Date(); d.setDate(d.getDate() + 10); return d.toISOString().slice(0,10); })(),
             tipoManutencao: 'PREVENTIVA',
             status: 'approved',
+            statusEquipamento: 'em_operacao',
             responsavel: 'Técnico D',
             periodicidade: ['ANUAL'],
             observacoes: 'Tudo OK',
@@ -97,6 +105,7 @@ export class PmocClientService {
             proximaManutencao: (() => { const d = new Date(); d.setDate(d.getDate() - 5); return d.toISOString().slice(0,10); })(),
             tipoManutencao: 'CORRETIVA',
             status: 'approved',
+            statusEquipamento: 'fora_de_operacao',
             responsavel: 'Técnico E',
             periodicidade: ['MENSAL'],
             observacoes: 'Falha detectada',
@@ -113,6 +122,7 @@ export class PmocClientService {
             proximaManutencao: (() => { const d = new Date(); d.setMonth(d.getMonth() + 6); return d.toISOString().slice(0,10); })(),
             tipoManutencao: 'PREVENTIVA',
             status: 'approved',
+            statusEquipamento: 'em_operacao',
             responsavel: 'Técnico F',
             periodicidade: ['ANUAL'],
             observacoes: '',
@@ -122,12 +132,12 @@ export class PmocClientService {
         }
     ];
 
-    getPending(): PmocSummary[] {
-        return this.items.filter(i => i.status === 'pending');
+    // optionally filter by clientId (if provided)
+    getPending(clientId?: string): PmocSummary[] {
+        return this.items.filter(i => i.status === 'pending' && (clientId ? i.clientId === clientId : true));
     }
-
-    getApproved(): PmocSummary[] {
-        return this.items.filter(i => i.status === 'approved');
+    getApproved(clientId?: string): PmocSummary[] {
+        return this.items.filter(i => i.status === 'approved' && (clientId ? i.clientId === clientId : true));
     }
 
     getById(id: string): PmocSummary | undefined {

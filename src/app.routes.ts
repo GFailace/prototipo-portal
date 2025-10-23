@@ -20,7 +20,8 @@ export const appRoutes: Routes = [
     },
     { path: 'landing', component: Landing },
     {
-        path: 'client',
+        // Accept a client identifier (UUID/hash) in the path so routes load per-client
+        path: 'client/:clientId',
         component: ClientLayout,
         canActivate: [ClientAuthGuard],
         children: [

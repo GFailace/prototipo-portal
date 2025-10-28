@@ -47,12 +47,12 @@ export class ClientMenu {
 
         this.model = [
             {
-                label: 'PMOCs',
-                items: [{ label: 'Minhas PMOCs', icon: 'pi pi-fw pi-file', routerLink: [...baseLink, 'pmocs'] }]
+                label: 'Atendimentos',
+                items: [{ label: 'Meus atendimentos', icon: 'pi pi-fw pi-wrench', routerLink: [...baseLink, 'pmocs'] }]
             },
             {
                 label: 'Equipamentos',
-                items: [{ label: 'Meus Equipamentos', icon: 'pi pi-fw pi-cog', routerLink: [...baseLink, 'equipamentos'] }]
+                items: [{ label: 'Meus equipamentos', icon: 'pi pi-fw pi-cog', routerLink: [...baseLink, 'equipamentos'] }]
             },
             {
                 label: 'ART',

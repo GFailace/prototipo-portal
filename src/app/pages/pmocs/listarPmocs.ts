@@ -2,7 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { FluidModule } from 'primeng/fluid';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
+import { CardModule } from 'primeng/card';
 import { SelectModule } from 'primeng/select';
+import { DialogModule } from 'primeng/dialog';
 // DatePicker removed
 import { CheckboxModule } from 'primeng/checkbox';
 import { FormsModule, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -31,236 +33,257 @@ const CHECKLIST_LABELS: Record<string, string> = {
 @Component({
     selector: 'app-pmocs-list',
     standalone: true,
-    imports: [CommonModule, InputTextModule, FluidModule, ButtonModule, SelectModule, FormsModule, ReactiveFormsModule, TextareaModule, TableModule, CheckboxModule, ToastModule, ConfirmDialogModule, InputNumberModule, FileUploadModule],
-    template: `<p-fluid>
+    imports: [
+        CommonModule,
+        InputTextModule,
+        FluidModule,
+        ButtonModule,
+        CardModule,
+        SelectModule,
+        DialogModule,
+        FormsModule,
+        ReactiveFormsModule,
+        TextareaModule,
+        TableModule,
+        CheckboxModule,
+        ToastModule,
+        ConfirmDialogModule,
+        InputNumberModule,
+        FileUploadModule
+    ],
+    template: `<div>
         <p-toast></p-toast>
         <p-confirmDialog></p-confirmDialog>
-        <div class="card">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
-                <!-- Search toolbar: searches by ID, equipamento, cliente and filters by status -->
-                <div class="search-bar w-full sm:flex-1">
-                    <span class="p-input-icon-left search-input">
-                        <i class="pi pi-search"></i>
-                        <input pInputText type="text" placeholder="Pesquisar por ID, equipamento ou cliente" [(ngModel)]="searchTerm" (input)="applyFilters()" />
-                    </span>
-                    <div class="controls">
-                        <div class="select-wrap">
-                            <select class="p-inputtext" [(ngModel)]="selectedStatus" (change)="applyFilters()">
-                                <option [ngValue]="null">Todos</option>
-                                <option *ngFor="let o of statusOptions" [ngValue]="o.value">{{ o.label }}</option>
-                            </select>
-                        </div>
-                        <button pButton type="button" icon="pi pi-times" class="p-button-text clear-button" (click)="clearFilters()" aria-label="Limpar filtros">Limpar pesquisa</button>
-                    </div>
-                </div>
-                <div class="mt-2 sm:mt-0">
-                    <p-button label="Novo PMOC" icon="pi pi-plus" iconPos="left" class="p-button-sm w-full sm:w-auto" (onClick)="goCreate()"></p-button>
-                </div>
+
+        <div class="page-wrap">
+            <div class="page-header">
+                <p-header>PMOCs</p-header>
             </div>
 
-            <div *ngIf="visiblePmocs && visiblePmocs.length > 0; else noPmocs">
-                <div class="flex flex-col gap-3">
-                    <div *ngFor="let p of visiblePmocs" class="p-4 sm:p-4 rounded border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 shadow-sm sm:shadow-none pmoc-card">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <div class="font-semibold text-lg pmoc-title">{{ p.cliente }}</div>
-                                <div class="text-sm mt-2 pmoc-id">
-                                    ID: <strong>{{ p.id }}</strong>
-                                </div>
-                                <div class="text-sm text-muted pmoc-equip">
-                                    Equipamento: <strong>{{ p.equipamento }}</strong>
-                                </div>
-                                <div class="mt-1">
-                                    <span class="text-sm">Status do equipamento:</span>
-                                    <span class="ml-2 text-sm font-medium">{{ p.statusEquipamento || '-' }}</span>
-                                </div>
-
-                                <div class="text-sm text-muted">
-                                    Data Manutenção: <strong>{{ p.dataManutencao | date: 'dd/MM/yyyy' }}</strong>
-                                </div>
-
-                                <div *ngIf="p.proximaManutencao" class="text-base mt-1" [ngClass]="isExpired(p.proximaManutencao) ? 'next-maint-expired' : isNearExpiry(p.proximaManutencao) ? 'next-maint-alert' : 'next-maint-row'">
-                                    <span class="font-semibold">Próxima manutenção:</span>
-                                    <span class="ml-2 font-medium">{{ p.proximaManutencao | date: 'dd/MM/yyyy' }}</span>
-                                    <span *ngIf="isExpired(p.proximaManutencao)" class="ml-3 text-sm font-semibold">— Vencido ({{ daysOverdue(p.proximaManutencao) }}d)</span>
-                                    <span *ngIf="!isExpired(p.proximaManutencao) && isNearExpiry(p.proximaManutencao)" class="ml-3 text-sm text-muted">— Próxima do vencimento ({{ daysUntil(p.proximaManutencao) }}d)</span>
-                                </div>
-                            </div>
-
-                            <div class="text-sm sm:text-xs text-muted-color mt-2 sm:mt-0">{{ p.dataManutencao | date: 'dd/MM/yyyy' }}</div>
+            <!-- Equipment edit modal -->
+            <p-dialog header="Editar equipamento" [(visible)]="equipmentModalVisible" [modal]="true" [style]="{ width: '680px' }" appendTo="body">
+                <!-- Only render the form when the FormGroup instance exists to avoid Angular runtime errors -->
+                <form *ngIf="modalEquipmentForm" [formGroup]="modalEquipmentForm" class="p-fluid">
+                    <div class="formgrid grid fg-compact">
+                        <div class="field col-12 md:col-3">
+                            <label for="modal-eq-id">ID </label>
+                            <input id="modal-eq-id" pInputText type="text" formControlName="id" />
+                        </div>
+                        <div class="field col-12 md:col-9">
+                            <label for="modal-eq-ident">Identificação do ambiente </label>
+                            <input id="modal-eq-ident" pInputText type="text" formControlName="identificacao" />
                         </div>
 
-                        <!-- Responsive footer: status badge + actions -->
-                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pmoc-footer">
-                            <div class="text-sm">
-                                Responsável: <strong class="ml-1">{{ p.responsavel }}</strong>
-                            </div>
-                            <div class="flex gap-2">
-                                <button pButton type="button" label="Detalhes" class="p-button-text p-button-sm" (click)="toggleExpand(p, $event)"></button>
-                                <button pButton type="button" label="Excluir" class="p-button-text p-button-danger p-button-sm" (click)="deletePmoc(p.id)"></button>
-                            </div>
+                        <div class="field col-12 md:col-3">
+                            <label for="modal-eq-tipo">Tipo de equipamento </label>
+                            <p-select id="modal-eq-tipo" [options]="equipamentoTypeOptions" formControlName="equipamentoTipo"></p-select>
+                        </div>
+                        <div class="field col-12 md:col-3">
+                            <label for="modal-eq-btu">Capacidade (BTUs) </label>
+                            <p-select id="modal-eq-btu" [options]="btuOptions" formControlName="capacidadeBtus"></p-select>
+                        </div>
+                        <div class="field col-12 md:col-3">
+                            <label for="modal-eq-tec">Tecnologia </label>
+                            <p-select id="modal-eq-tec" [options]="tecnologiaOptions" formControlName="tecnologia"></p-select>
+                        </div>
+                        <div class="field col-12 md:col-3">
+                            <label for="modal-eq-gas">Gás </label>
+                            <p-select id="modal-eq-gas" [options]="gasOptions" formControlName="tipoGas"></p-select>
                         </div>
 
-                        <div class="expand-panel mt-4 overflow-hidden" [class.open]="expandedPmocId === p.id">
-                            <div class="pt-4">
-                                <div class="flex items-center justify-between">
-                                    <div class="font-semibold text-xl">Detalhes — {{ p.id }}</div>
-                                </div>
+                        <div class="field col-12 md:col-3">
+                            <label for="modal-eq-ocup">Ocupantes </label>
+                            <p-inputNumber inputId="modal-eq-ocup" formControlName="ocupantes" [useGrouping]="false"></p-inputNumber>
+                        </div>
+                        <div class="field col-12 md:col-3">
+                            <label for="modal-eq-area">Área (m²) </label>
+                            <p-inputNumber inputId="modal-eq-area" formControlName="areaClimatizada" [useGrouping]="false"></p-inputNumber>
+                        </div>
+                    </div>
+                </form>
 
-                                <div class="p-4 rounded border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 mt-4">
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
-                                            <h3 class="font-medium mb-3">Informações Gerais</h3>
-                                            <div class="mb-2"><strong>Cliente:</strong> {{ p.cliente }}</div>
-                                            <div class="mb-2"><strong>Equipamento:</strong> {{ p.equipamento }}</div>
-                                            <div class="mb-2"><strong>Data:</strong> {{ p.dataManutencao | date: 'dd/MM/yyyy' }}</div>
-                                            <div class="mb-2"><strong>Próxima Manutenção:</strong> {{ p.proximaManutencao ? (p.proximaManutencao | date: 'dd/MM/yyyy') : '-' }}</div>
-                                            <div class="mb-2"><strong>Tipo:</strong> {{ p.tipoManutencao }}</div>
-                                            <div class="mb-2"><strong>Status:</strong> {{ p.statusEquipamento }}</div>
-                                            <div class="mb-2"><strong>Responsável:</strong> {{ p.responsavel }}</div>
-                                            <div class="mb-2"><strong>Periodicidade:</strong> {{ p.periodicidade }}</div>
-                                            <div class="whitespace-pre-wrap mb-3"><strong>Observações:</strong> {{ p.observacoes || '-' }}</div>
-                                            <div class="mb-3"><strong>Custos:</strong> {{ p.custos || '-' }}</div>
-                                            <div class="mb-3"><strong>Checklist - Outros:</strong> {{ p.checklistOutros || '-' }}</div>
-                                        </div>
+                <ng-template pTemplate="footer">
+                    <div class="flex justify-end gap-2">
+                        <button pButton type="button" label="Salvar" class="p-button-sm p-button-primary" (click)="saveEquipmentEdit(modalPmoc!, modalIndex!, $event)"></button>
+                        <button pButton type="button" label="Cancelar" class="p-button-sm p-button-text" (click)="equipmentModalVisible = false"></button>
+                    </div>
+                </ng-template>
+            </p-dialog>
 
-                                        <div>
-                                            <div class="mt-2">
-                                                <h4 class="font-medium mb-2">Checklist</h4>
-                                                <ul class="list-disc ml-6 mt-2">
-                                                    <ng-container *ngFor="let item of checklist">
-                                                        <li *ngIf="p?.checklist && p.checklist[item.controlName]" class="text-base leading-6 mb-1">{{ item.label }}</li>
-                                                    </ng-container>
-                                                </ul>
-                                            </div>
-                                        </div>
+            <!-- Search toolbar (reuses shared .search-bar styles) -->
+            <div class="search-bar my-4">
+                <span class="p-input-icon-left search-input">
+                    <i class="pi pi-search"></i>
+                    <input pInputText type="text" placeholder="Pesquisar por ID do PMOC ou cliente" [(ngModel)]="searchTerm" (input)="applyFilters()" />
+                </span>
+                <div class="select-wrap">
+                    <select class="p-inputtext" [(ngModel)]="selectedStatus" (change)="applyFilters()">
+                        <option [ngValue]="null">Todos</option>
+                        <option *ngFor="let o of statusOptions" [ngValue]="o.value">{{ o.label }}</option>
+                    </select>
+                </div>
+                <button pButton type="button" icon="pi pi-times" class="p-button-text clear-button" (click)="clearFilters()" aria-label="Limpar filtros">Limpar pesquisa</button>
+            </div>
+
+            <div class="card">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
+                    <!-- Button: appears below on mobile and on the right on larger screens -->
+                    <div class="button-wrap">
+                        <p-button label="Novo PMOC" icon="pi pi-plus" iconPos="left" class="p-button-sm" (onClick)="goCreate()"></p-button>
+                    </div>
+                </div>
+
+                <div *ngIf="visiblePmocs && visiblePmocs.length > 0; else noPmocs">
+                    <div class="flex flex-col gap-3">
+                        <div *ngFor="let p of visiblePmocs" class="p-4 sm:p-4 rounded border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 shadow-sm sm:shadow-none pmoc-card">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <div class="font-semibold text-lg pmoc-title">{{ p.cliente }}</div>
+                                    <div class="text-sm mt-2 pmoc-id">
+                                        ID: <strong>{{ p.id }}</strong>
+                                    </div>
+
+                                    <div class="text-sm text-muted mt-1">
+                                        Criação: <strong>{{ getCreatedAt(p) | date: 'dd/MM/yyyy' }}</strong> &middot; Validade: <strong>{{ getValidityDate(p) | date: 'dd/MM/yyyy' }}</strong>
+                                    </div>
+
+                                    <div class="mt-1">
+                                        <span class="text-sm">Status:</span>
+                                        <span class="ml-2 text-sm font-medium">{{ getPmocStatus(p) }}</span>
+                                    </div>
+                                    <div class="mt-1 text-sm">
+                                        <span class="text-sm"
+                                            >Responsável: <strong class="ml-1">{{ p.responsavel }}</strong></span
+                                        >
                                     </div>
                                 </div>
 
-                                <div class="flex action-row justify-start gap-2 mt-4">
-                                    <p-button label="Exportar" icon="pi pi-print" iconPos="left" (onClick)="exportToPrintFor(p)" styleClass="p-button-sm p-button-outlined action-btn"></p-button>
-                                    <p-button label="Download" icon="pi pi-download" iconPos="left" (onClick)="downloadPdfFor(p)" styleClass="p-button-sm p-button-outlined action-btn"></p-button>
-                                    <p-button label="Editar" icon="pi pi-pencil" iconPos="left" (onClick)="goEdit(p.id, $event)" styleClass="p-button-sm p-button-outlined action-btn"></p-button>
-                                    <p-button label="Fechar" icon="pi pi-times" iconPos="left" (onClick)="closeExpand()" styleClass="p-button-sm p-button-text action-btn"></p-button>
+                                <div class="text-sm sm:text-xs text-muted-color mt-2 sm:mt-0">{{ p.dataManutencao | date: 'dd/MM/yyyy' }}</div>
+                            </div>
+
+                            <!-- Equipamentos accordion (collapsed by default). Placed as the last visible section inside the card. -->
+                            <div class="equip-accordion mt-3">
+                                <!-- Summary / toggle line -->
+                                <div class="text-sm text-muted">
+                                    Equipamentos: <strong>{{ p.equipments?.length || (p.equipamento ? 1 : 0) }}</strong>
+                                    <a class="p-button-text p-button-sm ml-2" (click)="toggleExpand(p, $event)" role="button" [attr.aria-expanded]="expandedPmocId === p.id" style="cursor:pointer">{{
+                                        expandedPmocId === p.id ? 'Ocultar equipamentos' : 'Ver equipamentos'
+                                    }}</a>
+                                </div>
+
+                                <div class="expand-panel mt-3 overflow-hidden" [class.open]="expandedPmocId === p.id">
+                                    <div class="flex flex-col gap-2">
+                                        <ng-container *ngIf="p.equipments && p.equipments.length; else legacyEquipCompact">
+                                            <div *ngFor="let eq of p.equipments; let i = index" class="equip-compact-item">
+                                                <!-- read-only view -->
+                                                <div *ngIf="!(editingEquipment.pmocId === p.id && editingEquipment.index === i)">
+                                                    <div class="equip-compact-left">
+                                                        <div class="font-semibold">{{ eq.id }} — {{ eq.descricao || '-' }}</div>
+
+                                                        <div class="text-sm text-muted mt-1">
+                                                            <span
+                                                                >Tipo: <strong>{{ eq.equipamentoTipo || '-' }}</strong></span
+                                                            >
+                                                            <span class="mx-2">·</span>
+                                                            <span
+                                                                >Capacidade: <strong>{{ eq.capacidadeBtus ? eq.capacidadeBtus + ' BTUs' : '-' }}</strong></span
+                                                            >
+                                                        </div>
+
+                                                        <div class="text-sm text-muted mt-1">
+                                                            <span
+                                                                >Tecnologia: <strong>{{ eq.tecnologia || '-' }}</strong></span
+                                                            >
+                                                            <span class="mx-2">·</span>
+                                                            <span
+                                                                >Gás: <strong>{{ eq.tipoGas || '-' }}</strong></span
+                                                            >
+                                                        </div>
+
+                                                        <div class="text-sm text-muted mt-1">
+                                                            <span
+                                                                >Ocupantes: <strong>{{ eq.ocupantes !== undefined && eq.ocupantes !== null ? eq.ocupantes : '-' }}</strong></span
+                                                            >
+                                                            <span class="mx-2">·</span>
+                                                            <span
+                                                                >Área: <strong>{{ eq.areaClimatizada ? eq.areaClimatizada + ' m²' : '-' }}</strong></span
+                                                            >
+                                                        </div>
+
+                                                        <div *ngIf="eq.atendimentos && eq.atendimentos.length" class="text-sm mt-1">
+                                                            Último atendimento: <strong>{{ eq.atendimentos[eq.atendimentos.length - 1].dataAtendimento | date: 'dd/MM/yyyy' }}</strong>
+                                                        </div>
+                                                    </div>
+                                                    <div class="mt-4">
+                                                        <button pButton type="button" class="p-button-sm p-button-outlined mr-2" (click)="startEditEquipment(p, i, $event)">Editar</button>
+                                                        <button pButton type="button" class="p-button-sm p-button-outlined" (click)="registerAttendance(p.id, eq.id)">Registrar atendimento</button>
+                                                    </div>
+                                                </div>
+
+                                                <!-- edit mode is handled in a modal dialog now -->
+                                            </div>
+                                        </ng-container>
+                                        <ng-template #legacyEquipCompact>
+                                            <div class="equip-compact-item">
+                                                <div class="equip-compact-left">
+                                                    <div class="font-semibold">{{ p.equipamento || '-' }}</div>
+                                                </div>
+                                                <div class="equip-compact-actions">
+                                                    <button pButton type="button" class="p-button-sm p-button-outlined" (click)="registerAttendance(p.id, p.equipamento)">Registrar atendimento</button>
+                                                </div>
+                                            </div>
+                                        </ng-template>
+                                    </div>
                                 </div>
                             </div>
+
+                            <!-- Responsive footer: status badge + actions -->
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pmoc-footer">
+                                <div class="flex gap-2">
+                                    <button pButton type="button" label="Excluir" icon="pi pi-trash" iconPos="left" class="p-button-text p-button-danger p-button-sm" (click)="deletePmoc(p.id)"></button>
+                                </div>
+                            </div>
+
+                            <!-- Details panel removed: equipment accordion above replaces the previous detailed expand panel. Keep other actions available on the card footer. -->
                         </div>
                     </div>
                 </div>
+                <ng-template #noPmocs>
+                    <div class="text-sm text-muted">Nenhum PMOC encontrado.</div>
+                </ng-template>
             </div>
-            <ng-template #noPmocs>
-                <div class="text-sm text-muted">Nenhum PMOC encontrado.</div>
-            </ng-template>
         </div>
-    </p-fluid>`,
+    </div>`,
     styles: [
         `
-            /* PMOC list local styles: search bar (same format as pmoc-client) */
-            .search-bar {
-                display: flex;
-                gap: 0.75rem;
-                align-items: center;
-                max-width: 900px; /* keep the search area from growing too wide on large screens */
-                flex-wrap: nowrap; /* avoid wrapping controls on wide screens */
-            }
-            .p-input-icon-left.search-input {
-                flex: 1 1 auto;
-                min-width: 0;
-                position: relative;
-                /* reserve a smaller space for select + clear so the input can grow more on medium/large screens */
-                max-width: calc(100% - 160px);
-            }
-            .p-input-icon-left.search-input .pi {
-                position: absolute;
-                left: 0.75rem;
-                top: 50%;
-                transform: translateY(-50%);
-                color: var(--text-color-secondary, #6b7280);
-            }
-            .p-input-icon-left.search-input input.p-inputtext {
-                padding-left: 2.4rem;
-                width: 100%;
-            }
-            .select-wrap {
-                position: relative;
-                display: inline-block;
-                width: 11rem;
-                flex: 0 0 auto;
-                margin-left: 0.5rem;
-            }
-            .select-wrap select {
-                appearance: none;
-                -webkit-appearance: none;
-                -moz-appearance: none;
-                padding: 0.35rem 1.6rem 0.35rem 0.7rem;
-                border: 1px solid var(--p-textarea-border-color, var(--surface-border, #d1d5db));
-                border-radius: 0.25rem;
-                background: var(--p-textarea-background, #fff);
-                color: var(--text-color, #374151);
-                font-size: 0.95rem;
-                width: 100%;
-                box-sizing: border-box;
-            }
-            .select-wrap::after {
-                content: '\u203A';
-                position: absolute;
-                right: 0.6rem;
-                top: 50%;
-                transform: translateY(-50%) rotate(90deg);
-                color: var(--p-primary-color, #ff7a18);
-                opacity: 0.65;
-                pointer-events: none;
-            }
-            /* Dark mode adjustments for the native select to match PrimeNG theme tokens */
-            :host-context(.app-dark) .select-wrap select,
-            :host-context(.dark) .select-wrap select {
-                background: var(--surface-card, var(--surface-0, #111827));
-                color: var(--text-color, #f3f4f6);
-                border-color: var(--surface-border, rgba(255, 255, 255, 0.06));
-            }
-            :host-context(.app-dark) .select-wrap::after,
-            :host-context(.dark) .select-wrap::after {
-                color: var(--p-primary-color, #ff7a18);
-                opacity: 0.85;
-            }
-            .controls {
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
-                flex-shrink: 0;
-            }
+            /* Search bar styles have been centralized in src/app/shared/_searchbar.scss
+               and imported globally in src/assets/styles.scss. Keep that single source of truth
+               to avoid duplication. Small component-specific overrides remain below. */
 
-            .clear-button {
-                border-radius: 9999px;
-                background: transparent;
-                color: var(--p-primary-color, #ff7a18);
-                padding: 0.25rem 0.5rem;
-                white-space: nowrap; /* keep icon + text on single line */
-                margin-left: 0.25rem;
+            /* Ensure the 'Novo PMOC' button remains full-width on small screens */
+            .button-wrap .p-button {
+                display: inline-flex;
             }
             @media (max-width: 640px) {
-                .search-bar {
-                    flex-direction: column;
-                    align-items: stretch;
+                .button-wrap .p-button {
                     width: 100%;
-                    max-width: none;
-                    flex-wrap: wrap; /* allow stack on small screens */
-                }
-                .select-wrap {
-                    width: 100%;
-                    margin-left: 0; /* remove left margin when stacked */
-                }
-                .p-input-icon-left.search-input {
-                    max-width: none;
-                    width: 100%;
-                }
-                .p-input-icon-left.search-input input.p-inputtext {
-                    width: 100%;
-                }
-                .p-button .p-button-label {
-                    display: none;
                 }
             }
+
+            .page-wrap {
+                max-width: 980px;
+                margin: 0 auto;
+            }
+
+            p-header {
+                display: block;
+                font-size: 1.5rem;
+                font-weight: 600;
+                color: var(--text-color, inherit);
+                margin-bottom: 0.5rem;
+                line-height: 1.2;
+            }
+
             .pmoc-card {
                 padding: 0.95rem 1rem;
                 margin-top: 0.25rem;
@@ -283,6 +306,39 @@ const CHECKLIST_LABELS: Record<string, string> = {
                 margin-top: 0.5rem;
                 padding-top: 0.5rem;
                 border-top: 1px solid var(--surface-border, rgba(0, 0, 0, 0.06));
+            }
+
+            /* Equipment list item styling to match app cards */
+            .equip-list-item {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                padding: 0.6rem;
+                border-radius: 0.375rem;
+                border: 1px solid var(--surface-border, rgba(0, 0, 0, 0.06));
+                background: var(--surface-card, var(--surface-ground, #fff));
+            }
+            .equip-left .font-semibold {
+                font-size: 0.98rem;
+            }
+            .equip-left .text-sm {
+                margin-top: 4px;
+                color: var(--text-color-secondary);
+            }
+            .equip-actions {
+                min-width: 160px;
+                display: flex;
+                justify-content: flex-end;
+            }
+
+            /* p-card adjustments for equipment items */
+            .equip-card ::ng-deep .p-card-title {
+                font-weight: 600;
+                font-size: 1rem;
+            }
+            .equip-card {
+                border-radius: 0.5rem;
             }
 
             /* next maintenance visual variants */
@@ -379,10 +435,71 @@ const CHECKLIST_LABELS: Record<string, string> = {
                     }
                 }
             }
+
+            /* Compact equipment list (always visible within the PMOC card) */
+            .equip-compact-list {
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .equip-compact-item {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                padding: 0.55rem;
+                border-radius: 0.375rem;
+                border: 1px solid var(--surface-border, rgba(0, 0, 0, 0.06));
+                background: var(--surface-card, var(--surface-ground, #fff));
+            }
+            .equip-compact-left .font-semibold {
+                font-size: 0.98rem;
+            }
+            .equip-compact-left .text-sm {
+                margin-top: 4px;
+                color: var(--text-color-secondary);
+            }
+            .equip-compact-actions {
+                display: flex;
+                gap: 0.5rem;
+                flex: 0 0 260px; /* reserve a block for action buttons */
+                justify-content: flex-end;
+                align-items: center;
+            }
+
+            @media (max-width: 640px) {
+                .equip-compact-item {
+                    flex-direction: column;
+                    align-items: flex-start;
+                }
+                .equip-compact-actions {
+                    width: 100%;
+                    display: flex;
+                    justify-content: flex-start;
+                    margin-top: 0.5rem;
+                    gap: 0.5rem;
+                }
+                .equip-compact-actions .p-button {
+                    width: 100%;
+                }
+            }
+
+            /* Modal form styles moved to global SCSS: src/assets/pmocs/_pmoc-modal.scss */
         `
     ]
 })
 export class ListarPmocs {
+    // equipment edit state: map pmocId -> array of FormGroups for each equipment
+    equipmentEditForms: Record<string, any[]> = {};
+    // currently editing equipment (pmoc id and equipment index) - kept for legacy inline but now we use modal
+    editingEquipment: { pmocId?: string; index?: number } = {};
+
+    // modal editor state
+    equipmentModalVisible: boolean = false;
+    modalEquipmentForm!: FormGroup;
+    modalPmoc?: Pmoc | null = null;
+    modalIndex?: number | null = null;
+
     pmocs$: Observable<Pmoc[]>;
     selectedPmoc: Pmoc | null = null;
     expandedPmocId: string | null = null;
@@ -430,6 +547,39 @@ export class ListarPmocs {
         { label: 'AC018 | CORREDOR | 7.000 BTUS', value: 'AC018' },
         { label: 'AC019 | ENTRADA | 12.000 BTUS', value: 'AC019' },
         { label: 'AC020 | CEO OFFICE | 24.000 BTUS', value: 'AC020' }
+    ];
+
+    // equipment type & select options mirrored from criarPmoc
+    equipamentoTypeOptions = [
+        { label: 'Wi-Hall', value: 'wi-hall' },
+        { label: 'Built-in', value: 'built-in' },
+        { label: 'Self', value: 'self' },
+        { label: 'Cassete', value: 'cassete' },
+        { label: 'ACJ', value: 'acj' },
+        { label: 'MultiSplit', value: 'multisplit' }
+    ];
+
+    tecnologiaOptions = [
+        { label: 'Convencional', value: 'convencional' },
+        { label: 'Inverter', value: 'inverter' }
+    ];
+
+    gasOptions = [
+        { label: 'R22', value: 'R22' },
+        { label: 'R32', value: 'R32' },
+        { label: 'R410', value: 'R410' }
+    ];
+
+    btuOptions = [
+        { label: '9000 Btus', value: 9000 },
+        { label: '12000 Btus', value: 12000 },
+        { label: '18000 Btus', value: 18000 },
+        { label: '24000 Btus', value: 24000 },
+        { label: '30000 Btus', value: 30000 },
+        { label: '36000 Btus', value: 36000 },
+        { label: '42000 Btus', value: 42000 },
+        { label: '58000 Btus', value: 58000 },
+        { label: '60000 Btus', value: 60000 }
     ];
 
     tipoManutencaoOptions = [
@@ -504,6 +654,115 @@ export class ListarPmocs {
         });
     }
 
+    // create a FormGroup for editing/creating an equipment (mirrors criarPmoc.createEquipmentGroup)
+    private createEquipmentGroup(initial?: any) {
+        return this.fb.group({
+            // id should not be editable by the user - keep the control disabled
+            id: [{ value: initial?.id || '', disabled: true }],
+            identificacao: [initial?.identificacao || '', Validators.required],
+            ocupantes: [initial?.ocupantes || null],
+            ocupantesTipo: [initial?.ocupantesTipo || 'fixos'],
+            areaClimatizada: [initial?.areaClimatizada || null],
+            equipamentoTipo: [initial?.equipamentoTipo || '', Validators.required],
+            capacidadeBtus: [initial?.capacidadeBtus || null],
+            tecnologia: [initial?.tecnologia || null],
+            tipoGas: [initial?.tipoGas || null]
+        });
+    }
+
+    // initialize edit forms for a PMOC (called when expanding or when starting an edit)
+    private ensureEquipmentEditForms(pmoc: Pmoc) {
+        if (!pmoc || !pmoc.id) return;
+        if (this.equipmentEditForms[pmoc.id]) return;
+        const arr: any[] = [];
+        const eqs = pmoc.equipments && Array.isArray(pmoc.equipments) ? pmoc.equipments : [];
+        for (const eq of eqs) {
+            arr.push(this.createEquipmentGroup(eq));
+        }
+        this.equipmentEditForms[pmoc.id] = arr;
+    }
+
+    // return the FormGroup for a given pmoc/equipment index (creates if missing)
+    getEquipmentEditForm(pmocId: string, index: number) {
+        const arr = this.equipmentEditForms[pmocId] || [];
+        if (!arr[index]) {
+            arr[index] = this.createEquipmentGroup();
+            this.equipmentEditForms[pmocId] = arr;
+        }
+        return arr[index];
+    }
+
+    startEditEquipment(pmoc: Pmoc, index: number, evt?: Event) {
+        if (evt && typeof evt.stopPropagation === 'function') evt.stopPropagation();
+        if (!pmoc || !pmoc.id) return;
+        // open modal editor for this equipment
+        this.ensureEquipmentEditForms(pmoc);
+        const eq = pmoc.equipments && pmoc.equipments[index] ? pmoc.equipments[index] : null;
+        const fg = this.getEquipmentEditForm(pmoc.id, index);
+        if (eq) {
+            fg.patchValue({
+                id: eq.id || '',
+                identificacao: eq.descricao || '',
+                ocupantes: eq.ocupantes ?? null,
+                ocupantesTipo: (eq as any).ocupantesTipo || 'fixos',
+                areaClimatizada: eq.areaClimatizada ?? null,
+                equipamentoTipo: eq.equipamentoTipo || '',
+                capacidadeBtus: eq.capacidadeBtus ?? null,
+                tecnologia: eq.tecnologia || null,
+                tipoGas: eq.tipoGas || null
+            });
+        }
+
+        this.modalEquipmentForm = fg;
+        this.modalPmoc = pmoc;
+        this.modalIndex = index;
+        this.equipmentModalVisible = true;
+    }
+
+    cancelEditEquipment(evt?: Event) {
+        if (evt && typeof evt.stopPropagation === 'function') evt.stopPropagation();
+        this.editingEquipment = {};
+    }
+
+    saveEquipmentEdit(pmoc: Pmoc, index: number, evt?: Event) {
+        if (evt && typeof evt.stopPropagation === 'function') evt.stopPropagation();
+        if (!pmoc || !pmoc.id) return;
+        const fg = this.getEquipmentEditForm(pmoc.id, index);
+        if (!fg || !fg.valid) {
+            fg.markAllAsTouched?.();
+            this.msg.add({ severity: 'warn', summary: 'Validação', detail: 'Preencha os campos obrigatórios do equipamento.' });
+            return;
+        }
+    // include disabled controls (id is disabled) when reading values
+    const val = fg.getRawValue();
+        // clone pmoc and its equipments array
+        const updatedPmoc: Pmoc = { ...pmoc };
+        const equipments = updatedPmoc.equipments && Array.isArray(updatedPmoc.equipments) ? updatedPmoc.equipments.slice() : [];
+        equipments[index] = {
+            id: val.id || equipments[index]?.id || `AC${String(index + 1).padStart(3, '0')}`,
+            descricao: val.identificacao || equipments[index]?.descricao || '',
+            capacidadeBtus: val.capacidadeBtus ?? equipments[index]?.capacidadeBtus,
+            statusEquipamento: equipments[index]?.statusEquipamento || 'EM OPERAÇÃO',
+            atendimentos: equipments[index]?.atendimentos || [],
+            equipamentoTipo: val.equipamentoTipo || equipments[index]?.equipamentoTipo,
+            tecnologia: val.tecnologia || equipments[index]?.tecnologia,
+            tipoGas: val.tipoGas || equipments[index]?.tipoGas,
+            ocupantes: val.ocupantes ?? equipments[index]?.ocupantes,
+            areaClimatizada: val.areaClimatizada ?? equipments[index]?.areaClimatizada
+        } as any;
+        updatedPmoc.equipments = equipments;
+        this.pmocService.update(updatedPmoc.id, { equipments: updatedPmoc.equipments });
+        this.selectedPmoc = { ...updatedPmoc };
+        this.msg.add({ severity: 'success', summary: 'Salvo', detail: 'Equipamento atualizado.' });
+        // close modal and reset modal-related state
+        this.editingEquipment = {};
+        this.equipmentModalVisible = false;
+        this.modalPmoc = null;
+        this.modalIndex = null;
+        // clear modal form reference so template *ngIf hides it
+        this.modalEquipmentForm = null as any;
+    }
+
     ngOnInit(): void {
         // subscribe to the source observable and keep a local copy for filtering
         this.pmocService.pmocs$.subscribe((list) => {
@@ -517,9 +776,9 @@ export class ListarPmocs {
         const matches = (item: Pmoc) => {
             if (term) {
                 const id = (item.id || '').toString().toLowerCase();
-                const eq = (item.equipamento || '').toString().toLowerCase();
                 const cl = (item.cliente || '').toString().toLowerCase();
-                if (!id.includes(term) && !eq.includes(term) && !cl.includes(term)) return false;
+                // only match by PMOC id or cliente as requested
+                if (!id.includes(term) && !cl.includes(term)) return false;
             }
             if (this.selectedStatus && this.selectedStatus !== null) {
                 if ((item.statusEquipamento || '').toLowerCase() !== String(this.selectedStatus).toLowerCase()) return false;
@@ -566,6 +825,58 @@ export class ListarPmocs {
         return Math.abs(this.daysUntil(dateStr));
     }
 
+    // --- PMOC helpers: creation, validity and next maintenance ---
+    getCreatedAt(p: Pmoc): Date {
+        const v = (p as any).createdAt || p.dataManutencao || new Date().toISOString();
+        return this.parseDateFromIso(v);
+    }
+
+    getValidityDate(p: Pmoc): Date {
+        // If explicit validade set, use it; otherwise createdAt + 12 months
+        if ((p as any).validade) return this.parseDateFromIso((p as any).validade);
+        const created = this.getCreatedAt(p);
+        if (isNaN(created.getTime())) return new Date(NaN);
+        const d = new Date(created.getTime());
+        d.setFullYear(d.getFullYear() + 1);
+        return d;
+    }
+
+    getPmocStatus(p: Pmoc): string {
+        const val = this.getValidityDate(p);
+        if (isNaN(val.getTime())) return '-';
+        return this.isExpired(val) ? 'CONCLUÍDO' : 'EM DIA';
+    }
+
+    getNextMaintenance(p: Pmoc): string | null {
+        const candidates: Date[] = [];
+
+        // pmoc-level proximaManutencao
+        if (p.proximaManutencao) {
+            const d = this.parseDateFromIso(p.proximaManutencao);
+            if (!isNaN(d.getTime())) candidates.push(d);
+        }
+
+        // equipments' attendimentos
+        if ((p as any).equipments && Array.isArray((p as any).equipments)) {
+            for (const eq of (p as any).equipments as any[]) {
+                if (eq.atendimentos && Array.isArray(eq.atendimentos)) {
+                    for (const a of eq.atendimentos) {
+                        if (a.proximaManutencao) {
+                            const d = this.parseDateFromIso(a.proximaManutencao);
+                            if (!isNaN(d.getTime())) candidates.push(d);
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!candidates.length) return null;
+
+        // return the earliest date (nearest in time) among candidates
+        candidates.sort((a, b) => a.getTime() - b.getTime());
+        return this.formatDateToIso(candidates[0]);
+    }
+
     goEdit(id?: string | null, evt?: Event) {
         if (evt && typeof evt.stopPropagation === 'function') evt.stopPropagation();
         if (!id) return;
@@ -600,14 +911,26 @@ export class ListarPmocs {
     }
 
     checklistKeys(p: Pmoc | null) {
-        return p ? Object.keys(p.checklist) : [];
+        return p && p.checklist ? Object.keys(p.checklist) : [];
     }
 
     getChecklistLabel(key: string) {
         return CHECKLIST_LABELS[key] || key;
     }
 
-    getAssinaturaLabel(value: string) {
+    isChecklistChecked(p: Pmoc | null, key: string) {
+        return !!(p && p.checklist && p.checklist[key]);
+    }
+
+    registerAttendance(pmocId: string, equipamentoId?: string) {
+        // Navigate to registrar-atendimento route with query params so the form can prefill if implemented
+        const params: any = { pmocId };
+        if (equipamentoId) params.equipamentoId = equipamentoId;
+        this.router.navigate(['/pages/pmocs/registrar-atendimento'], { queryParams: params }).catch((err) => console.error('Navigation to registrar-atendimento failed', err));
+    }
+
+    getAssinaturaLabel(value?: string) {
+        if (!value) return '-';
         if (value === 'sem_restricoes') return 'Confirmo que a manutenção foi realizada SEM RESTRIÇÕES';
         if (value === 'com_restricoes_item_7') return 'Confirmo que a manutenção foi realizada COM RESTRIÇÕES, conforme item 7';
         return value;
@@ -848,7 +1171,7 @@ export class ListarPmocs {
                 (k) => `
             <tr>
                 <td style="padding:6px 12px;border:1px solid #e5e7eb;">${this.getChecklistLabel(k)}</td>
-                <td style="padding:6px 12px;border:1px solid #e5e7eb;">${p.checklist[k] ? 'OK' : 'NÃO'}</td>
+                <td style="padding:6px 12px;border:1px solid #e5e7eb;">${p.checklist && p.checklist[k] ? 'OK' : 'NÃO'}</td>
             </tr>
         `
             )
@@ -887,7 +1210,7 @@ export class ListarPmocs {
                     (k) => `
             <tr>
                 <td style="padding:6px 12px;border:1px solid #e5e7eb;">${this.getChecklistLabel(k)}</td>
-                <td style="padding:6px 12px;border:1px solid #e5e7eb;">${p.checklist[k] ? 'OK' : 'NÃO'}</td>
+                <td style="padding:6px 12px;border:1px solid #e5e7eb;">${p.checklist && p.checklist[k] ? 'OK' : 'NÃO'}</td>
             </tr>
         `
                 )
@@ -963,7 +1286,7 @@ export class ListarPmocs {
                 (k) => `
             <tr>
                 <td style="padding:6px 12px;border:1px solid #e5e7eb;">${this.getChecklistLabel(k)}</td>
-                <td style="padding:6px 12px;border:1px solid #e5e7eb;">${p.checklist[k] ? 'OK' : 'NÃO'}</td>
+                <td style="padding:6px 12px;border:1px solid #e5e7eb;">${p.checklist && p.checklist[k] ? 'OK' : 'NÃO'}</td>
             </tr>
         `
             )

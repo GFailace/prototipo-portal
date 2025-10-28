@@ -1,0 +1,95 @@
+/* Shared searchbar styles used across the app.
+   Components should use the following structure/classes to get consistent styling:
+   - .search-bar (container)
+   - .p-input-icon-left.search-input (input wrapper)
+   - .select-wrap (native select wrapper)
+   - .clear-button (clear/search reset button)
+
+   This file centralizes desktop, mobile and dark-mode tweaks so all search toolbars
+   behave and look the same across the application.
+*/
+
+.search-bar {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  max-width: 900px;
+}
+
+.p-input-icon-left.search-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  position: relative;
+  max-width: calc(100% - 220px);
+}
+.p-input-icon-left.search-input .pi {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-color-secondary, #6b7280);
+}
+.p-input-icon-left.search-input input.p-inputtext {
+  padding-left: 2.4rem;
+  width: 100%;
+}
+
+.select-wrap {
+  position: relative;
+  display: inline-block;
+  width: 12rem;
+}
+.select-wrap select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding: 0.35rem 1.6rem 0.35rem 0.7rem;
+  border: 1px solid var(--p-textarea-border-color, var(--surface-border, #d1d5db));
+  border-radius: 0.25rem;
+  background: var(--p-textarea-background, #fff);
+  color: var(--text-color, #374151);
+  font-size: 0.95rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+.select-wrap::after {
+  content: '\203A';
+  position: absolute;
+  right: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%) rotate(90deg);
+  color: var(--p-primary-color, #ff7a18);
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.clear-button { border-radius: 9999px; }
+
+/* Dark-mode tweaks for searchbar and form controls */
+.app-dark .p-inputtext,
+.app-dark .select-wrap select {
+  background: var(--surface-card, #0b1220);
+  color: var(--text-color, #f3f4f6);
+  border-color: var(--surface-border, rgba(255,255,255,0.06));
+}
+.app-dark .select-wrap::after {
+  color: var(--p-primary-color, #ff7a18);
+  opacity: 0.85;
+}
+
+/* Mobile layout: stack controls and make them full width */
+@media (max-width: 640px) {
+  .search-bar {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    max-width: none;
+    gap: 0.5rem;
+  }
+  .p-input-icon-left.search-input { max-width: none; width: 100%; }
+  .select-wrap { width: 100%; }
+  .select-wrap select { width: 100%; }
+  .clear-button { align-self: flex-end; margin-top: 0.25rem; }
+  /* hide long button labels to keep toolbar compact on small screens */
+  .p-button .p-button-label { display: none; }
+}

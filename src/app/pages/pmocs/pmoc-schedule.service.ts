@@ -2,23 +2,19 @@ import { Injectable } from '@angular/core';
 
 export type ChecklistItem = { controlName: string; itemNumber?: number; unit?: 'EVAPORADORA' | 'CONDENSADORA'; label: string; periodicity?: 'MENSAL' | 'TRIMESTRAL' | 'SEMESTRAL' | 'ANUAL' };
 export type Attendance = { id: string; equipamentoId: string; procedimentoKey: string; date: string; result: string; tecnico?: string; notas?: string };
-export type Equipment = { id: string; cliente: string; ambiente?: string; areaM2?: string; capacidadeBtus?: number; tecnologia?: string; gas?: string; ocupantes?: number; contractMonth?: number };
+export type Equipment = { id: string; cliente: string; clientId?: string; ambiente?: string; areaM2?: string; capacidadeBtus?: number; tecnologia?: string; gas?: string; ocupantes?: number; contractMonth?: number; statusEquipamento?: 'em_operacao' | 'fora_de_operacao' | string };
 
 @Injectable({ providedIn: 'root' })
 export class PmocScheduleService {
     // mock equipment
     private equipments: Equipment[] = [
-        {
-            id: 'AC014',
-            cliente: 'BHIO MATRIZ',
-            ambiente: 'Diretoria',
-            areaM2: '35 m²',
-            capacidadeBtus: 24000,
-            tecnologia: 'Convencional',
-            gas: 'R410',
-            ocupantes: 8,
-            contractMonth: 9 // September
-        }
+        { id: 'AC001', clientId: 'demo-client', cliente: 'BHIO SUPPLY | ESTEIO - RS', ambiente: 'Sala de Reuniões', capacidadeBtus: 18000, tecnologia: 'Inverter', gas: 'R410', ocupantes: 6, contractMonth: 10, statusEquipamento: 'em_operacao' },
+        { id: 'AC002', cliente: 'BHIO SUPPLY | CAMPO BOM - RS', ambiente: 'Armazém', capacidadeBtus: 36000, tecnologia: 'Convencional', gas: 'R22', ocupantes: 2, contractMonth: 3, statusEquipamento: 'em_operacao' },
+        { id: 'AC010', cliente: 'BHIO SUPPLY FILIAL | ESTEIO - RS', ambiente: 'Recepção', capacidadeBtus: 12000, tecnologia: 'Inverter', gas: 'R410', ocupantes: 4, contractMonth: 11, statusEquipamento: 'fora_de_operacao' },
+        { id: 'AC014', cliente: 'BHIO MATRIZ', ambiente: 'Diretoria', areaM2: '35 m²', capacidadeBtus: 24000, tecnologia: 'Convencional', gas: 'R410', ocupantes: 8, contractMonth: 9, statusEquipamento: 'em_operacao' },
+        { id: 'AC100', cliente: 'CLIENTE TESTE | SÃO PAULO - SP', ambiente: 'Loja', capacidadeBtus: 30000, tecnologia: 'Inverter', gas: 'R410', ocupantes: 12, contractMonth: 9, statusEquipamento: 'em_operacao' },
+        { id: 'AC200', cliente: 'CLIENTE VENCIDO | RIO - RJ', ambiente: 'Escritório', capacidadeBtus: 24000, tecnologia: 'Convencional', gas: 'R410', ocupantes: 10, contractMonth: 8, statusEquipamento: 'fora_de_operacao' },
+        { id: 'AC300', cliente: 'CLIENTE LONGO PRAZO | NATAL - RN', ambiente: 'Fabrica', capacidadeBtus: 48000, tecnologia: 'Central', gas: 'R134a', ocupantes: 20, contractMonth: 4, statusEquipamento: 'em_operacao' }
     ];
 
     // mock attendances: multiple procedures across months

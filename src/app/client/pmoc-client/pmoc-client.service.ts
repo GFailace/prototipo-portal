@@ -20,6 +20,25 @@ export interface PmocSummary {
     checklist?: { label: string; checked: boolean }[];
 }
 
+export interface Attendance {
+    id: string; // attendance id
+    pmocId: string; // reference to PMOC id
+    cliente: string;
+    clientId?: string;
+    equipamento: string;
+    dataManutencao?: string;
+    proximaManutencao?: string;
+    tipoManutencao?: string;
+    status: 'pending' | 'approved';
+    statusEquipamento?: string;
+    responsavel?: string;
+    periodicidade?: string[];
+    observacoes?: string;
+    custos?: number;
+    assinatura?: string;
+    checklist?: { label: string; checked: boolean }[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class PmocClientService {
     // Mock data for now; replace with HTTP calls to backend later
@@ -149,6 +168,20 @@ export class PmocClientService {
     }
     getApproved(clientId?: string): PmocSummary[] {
         return this.items.filter(i => i.status === 'approved' && (clientId ? i.clientId === clientId : true));
+    }
+
+    // Mock attendances (linked to PMOC ids)
+    private attendances: Attendance[] = [
+        { id: 'A-1001', pmocId: 'PMOC-001', cliente: 'BHIO SUPPLY | ESTEIO - RS', clientId: 'demo-client', equipamento: 'AC001', dataManutencao: '2025-10-01', proximaManutencao: '2026-04-01', tipoManutencao: 'PMOC', status: 'pending', statusEquipamento: 'em_operacao', responsavel: 'Técnico A', periodicidade: ['MENSAL'], observacoes: 'Filtro com acumulo de poeira', custos: 250, assinatura: 'Assinado por Fulano', checklist: [{ label: 'Limpeza', checked: true }] },
+        { id: 'A-1002', pmocId: 'PMOC-002', cliente: 'BHIO SUPPLY | CAMPO BOM - RS', equipamento: 'AC002', dataManutencao: '2025-09-10', proximaManutencao: '2026-03-10', tipoManutencao: 'PREVENTIVA', status: 'approved', statusEquipamento: 'em_operacao', responsavel: 'Técnico B', periodicidade: ['ANUAL'], observacoes: '', custos: 0, assinatura: 'Assinado por Sicrano', checklist: [] },
+        { id: 'A-1003', pmocId: 'PMOC-003', cliente: 'BHIO SUPPLY FILIAL | ESTEIO - RS', equipamento: 'AC010', dataManutencao: '2025-11-15', proximaManutencao: '2026-05-15', tipoManutencao: 'CORRETIVA', status: 'pending', statusEquipamento: 'fora_de_operacao', responsavel: 'Técnico C', periodicidade: ['SEMESTRAL'], observacoes: '', custos: 120.5, assinatura: '', checklist: [] },
+        { id: 'A-1004', pmocId: 'PMOC-004', cliente: 'CLIENTE TESTE | SÃO PAULO - SP', equipamento: 'AC100', dataManutencao: '2025-09-20', proximaManutencao: (() => { const d = new Date(); d.setDate(d.getDate() + 10); return d.toISOString().slice(0,10); })(), tipoManutencao: 'PREVENTIVA', status: 'approved', statusEquipamento: 'em_operacao', responsavel: 'Técnico D', periodicidade: ['ANUAL'], observacoes: '', custos: 0, assinatura: 'Assinado', checklist: [] },
+        { id: 'A-1005', pmocId: 'PMOC-005', cliente: 'CLIENTE VENCIDO | RIO - RJ', equipamento: 'AC200', dataManutencao: '2024-08-01', proximaManutencao: (() => { const d = new Date(); d.setDate(d.getDate() - 5); return d.toISOString().slice(0,10); })(), tipoManutencao: 'CORRETIVA', status: 'approved', statusEquipamento: 'fora_de_operacao', responsavel: 'Técnico E', periodicidade: ['MENSAL'], observacoes: '', custos: 350, assinatura: '', checklist: [] },
+        { id: 'A-1006', pmocId: 'PMOC-006', cliente: 'CLIENTE LONGO PRAZO | NATAL - RN', equipamento: 'AC300', dataManutencao: '2025-01-01', proximaManutencao: (() => { const d = new Date(); d.setMonth(d.getMonth() + 6); return d.toISOString().slice(0,10); })(), tipoManutencao: 'PREVENTIVA', status: 'approved', statusEquipamento: 'em_operacao', responsavel: 'Técnico F', periodicidade: ['ANUAL'], observacoes: '', custos: 100, assinatura: '', checklist: [] }
+    ];
+
+    getAttendances(clientId?: string): Attendance[] {
+        return this.attendances.filter(a => (clientId ? a.clientId === clientId : true));
     }
 
     getById(id: string): PmocSummary | undefined {

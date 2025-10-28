@@ -24,7 +24,7 @@ export const appRoutes: Routes = [
         component: ClientLayout,
         canActivate: [ClientAuthGuard],
         children: [
-            { path: 'pmocs', loadComponent: () => import('./app/client/pmoc-client/pmoc-client.component').then((m) => m.PmocClientComponent) },
+            { path: 'atendimentos', loadComponent: () => import('./app/client/pmoc-client/pmoc-client.component').then((m) => m.PmocClientComponent) },
             { path: 'art', loadComponent: () => import('./app/client/pmoc-client/pmoc-art-viewer.component').then((m) => m.PmocArtViewerComponent) },
             { path: 'equipamentos', loadComponent: () => import('./app/pages/clientes/client-equipments').then((m) => m.ClientEquipmentsComponent) },
             { path: 'equipamentos/:id/schedule', loadComponent: () => import('./app/pages/clientes/equipamento-schedule.component').then((m) => m.EquipamentoScheduleComponent) },

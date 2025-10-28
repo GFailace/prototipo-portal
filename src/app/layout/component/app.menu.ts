@@ -35,7 +35,7 @@ export class AppMenu {
                 label: 'PMOCs',
                 items: [
                     { label: 'Listar PMOCs', icon: 'pi pi-fw pi-file-check', routerLink: ['/pages/pmocs/listar-pmocs'] },
-                    { label: 'Registrar PMOC', icon: 'pi pi-fw pi-file-plus', routerLink: ['/pages/pmocs/registrar-pmoc'] },
+                    { label: 'Criar PMOC', icon: 'pi pi-fw pi-file-plus', routerLink: ['/pages/pmocs/registrar-pmoc'] },
                     { label: 'Registrar Atendimento', icon: 'pi pi-fw pi-calendar-plus', routerLink: ['/pages/pmocs/registrar-atendimento'] }
                 ]
             },

@@ -1,7 +1,7 @@
 import { Component, Input, HostListener, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { PmocClientService, PmocSummary } from './pmoc-client.service';
+import { PmocClientService, PmocSummary, Attendance } from './pmoc-client.service';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { DividerModule } from 'primeng/divider';
@@ -11,7 +11,6 @@ import { PanelModule } from 'primeng/panel';
 import { DialogModule } from 'primeng/dialog';
 import { FormsModule } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
-import { PmocArtViewerComponent } from './pmoc-art-viewer.component';
 
 @Component({
     selector: 'app-pmoc-client',
@@ -199,8 +198,8 @@ import { PmocArtViewerComponent } from './pmoc-art-viewer.component';
         `
     ],
     template: `
-        <div class="p-4">
-            <p-header>Minhas PMOCs</p-header>
+        <div class="p-2">
+            <p-header>Atendimentos</p-header>
             <!-- Search toolbar -->
             <div class="search-bar my-4">
                 <span class="p-input-icon-left search-input">
@@ -221,32 +220,38 @@ import { PmocArtViewerComponent } from './pmoc-art-viewer.component';
                 <div *ngIf="pending.length === 0" class="text-sm text-muted mt-3">Nenhuma PMOC pendente.</div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 gap-4">
                 <div *ngFor="let p of pending" class="p-4 rounded border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 shadow-sm pmoc-card">
                     <div class="flex justify-between items-start">
                         <div>
-                            <div class="font-semibold text-lg pmoc-title">{{ p.cliente }}</div>
-                            <div class="text-sm mt-2 pmoc-id">
-                                ID: <strong>{{ p.id }}</strong>
+                            <!-- emphasize equipamento as primary title -->
+                            <div class="font-semibold text-xl pmoc-title">{{ p.equipamento }}</div>
+                            <div class="text-sm mt-1 pmoc-id">
+                                Cliente: <strong>{{ p.cliente }}</strong>
                             </div>
-                            <div class="text-sm text-muted pmoc-equip">
-                                Equipamento: <strong>{{ p.equipamento }}</strong>
+                            <div class="text-sm mt-1 pmoc-id">
+                                ID do atendimento: <strong>{{ p.id }}</strong>
                             </div>
-                            <div class="mt-1">
-                                <span class="text-sm">Status do equipamento:</span>
-                                <span class="ml-2 text-sm font-medium">{{ getEquipStatusLabel(p) }}</span>
+                            <div class="text-sm mt-1 pmoc-id">
+                                ID do PMOC: <strong>{{ p.pmocId }}</strong>
                             </div>
 
-                            <div class="text-sm text-muted">
-                                Data Manutenção: <strong>{{ p.dataManutencao | date: 'dd/MM/yyyy' }}</strong>
+                            <div class="mt-3">
+                                <div class="text-sm text-muted">Data da manutenção realizada</div>
+                                <div class="font-semibold text-lg">{{ p.dataManutencao | date: 'dd/MM/yyyy' }}</div>
                             </div>
-                            <div *ngIf="p.proximaManutencao" class="text-base mt-1" [ngClass]="isExpired(p.proximaManutencao) ? 'next-maint-expired' : isNearExpiry(p.proximaManutencao) ? 'next-maint-alert' : 'next-maint-row'">
-                                <span *ngIf="!isExpired(p.proximaManutencao)" class="font-semibold">Próxima manutenção:</span>
-                                <span *ngIf="isExpired(p.proximaManutencao)" class="font-semibold">Próxima manutenção:</span>
-                                <span class="ml-2 font-medium">{{ p.proximaManutencao | date: 'dd/MM/yyyy' }}</span>
-                                <span *ngIf="isExpired(p.proximaManutencao)" class="ml-3 text-sm font-semibold">— Vencido ({{ daysOverdue(p.proximaManutencao) }}d)</span>
-                                <span *ngIf="!isExpired(p.proximaManutencao) && isNearExpiry(p.proximaManutencao)" class="ml-3 text-sm text-muted">— Próxima do vencimento ({{ daysUntil(p.proximaManutencao) }}d)</span>
+
+                            <div class="mt-3">
+                                <div class="text-sm text-muted">Próxima manutenção</div>
+                                <div class="mt-1" [ngClass]="getNextMaintClass(p)">
+                                    <span class="font-semibold">{{ getEffectiveNextMaintenanceLabel(p) }}</span>
+                                    <span class="ml-3 text-sm text-muted">{{ getEffectiveNextMaintenance(p) | date: 'dd/MM/yyyy' }}</span>
+                                </div>
                             </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-sm">Status do equipamento</div>
+                            <div class="font-semibold mt-1">{{ getEquipStatusLabel(p) }}</div>
                         </div>
                     </div>
 
@@ -277,32 +282,39 @@ import { PmocArtViewerComponent } from './pmoc-art-viewer.component';
             </div>
 
             <div class="mt-6">
-                <p-header class="section-header">Aprovadas</p-header>
-                <div *ngIf="approved.length === 0" class="text-sm text-muted">Nenhuma PMOC aprovada.</div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                <p-header class="section-header">Aprovados</p-header>
+                <div *ngIf="approved.length === 0" class="text-sm text-muted">Nenhum atendimento correspondente.</div>
+                <div class="grid grid-cols-1 gap-4 mt-3">
                     <div *ngFor="let p of approved" class="p-4 rounded border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 shadow-sm pmoc-card">
                         <div class="flex justify-between items-start">
                             <div>
-                                <div class="font-semibold text-lg pmoc-title">{{ p.cliente }}</div>
-                                <div class="text-sm mt-2 pmoc-id">
-                                    ID: <strong>{{ p.id }}</strong>
+                                <div class="font-semibold text-xl pmoc-title">{{ p.equipamento }}</div>
+                                <div class="text-sm mt-1 pmoc-id">
+                                    Cliente: <strong>{{ p.cliente }}</strong>
                                 </div>
-                                <div class="text-sm text-muted pmoc-equip">Equipamento: {{ p.equipamento }}</div>
-                                <div class="mt-1">
-                                    <span class="text-sm">Status do equipamento:</span>
-                                    <span class="ml-2 text-sm font-medium">{{ getEquipStatusLabel(p) }}</span>
+                                <div class="text-sm mt-1 pmoc-id">
+                                    ID do atendimento: <strong>{{ p.id }}</strong>
+                                </div>
+                                <div class="text-sm mt-1 pmoc-id">
+                                    ID do PMOC: <strong>{{ p.pmocId }}</strong>
                                 </div>
 
-                                <div class="text-sm text-muted">
-                                    Data Manutenção: <strong>{{ p.dataManutencao | date: 'dd/MM/yyyy' }}</strong>
+                                <div class="mt-3">
+                                    <div class="text-sm text-muted">Data da manutenção realizada</div>
+                                    <div class="font-semibold text-lg">{{ p.dataManutencao | date: 'dd/MM/yyyy' }}</div>
                                 </div>
-                                <div *ngIf="p.proximaManutencao" class="text-base mt-1" [ngClass]="isExpired(p.proximaManutencao) ? 'next-maint-expired' : isNearExpiry(p.proximaManutencao) ? 'next-maint-alert' : 'next-maint-row'">
-                                    <span *ngIf="!isExpired(p.proximaManutencao)" class="font-semibold">Próxima manutenção:</span>
-                                    <span *ngIf="isExpired(p.proximaManutencao)" class="font-semibold">Próxima manutenção:</span>
-                                    <span class="ml-2 font-medium">{{ p.proximaManutencao | date: 'dd/MM/yyyy' }}</span>
-                                    <span *ngIf="isExpired(p.proximaManutencao)" class="ml-3 text-sm font-semibold">— Vencido ({{ daysOverdue(p.proximaManutencao) }}d)</span>
-                                    <span *ngIf="!isExpired(p.proximaManutencao) && isNearExpiry(p.proximaManutencao)" class="ml-3 text-sm text-muted">— Próximo ao vencimento ({{ daysUntil(p.proximaManutencao) }}d)</span>
+
+                                <div class="mt-3">
+                                    <div class="text-sm text-muted">Próxima manutenção</div>
+                                    <div class="mt-1" [ngClass]="getNextMaintClass(p)">
+                                        <span class="font-semibold">{{ getEffectiveNextMaintenanceLabel(p) }}</span>
+                                        <span class="ml-3 text-sm text-muted">{{ getEffectiveNextMaintenance(p) | date: 'dd/MM/yyyy' }}</span>
+                                    </div>
                                 </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm">Status do equipamento</div>
+                                <div class="font-semibold mt-1">{{ getEquipStatusLabel(p) }}</div>
                             </div>
                         </div>
 
@@ -325,7 +337,9 @@ import { PmocArtViewerComponent } from './pmoc-art-viewer.component';
 
             <p-drawer [(visible)]="drawerVisible" position="right" [style]="drawerStyle">
                 <div class="p-4 flex items-center justify-between">
-                    <div class="font-semibold">Detalhes — {{ selected?.id }}</div>
+                    <div class="font-semibold">
+                        Detalhes — Atendimento {{ selected?.id }} <span style="font-weight:500; color:var(--text-color-secondary)">(PMOC: {{ selected?.pmocId }})</span>
+                    </div>
                     <div *ngIf="selected && isPending(selected)" class="ml-2">
                         <button pButton type="button" icon="pi pi-check" label="Aprovar" class="p-button-success" (click)="openApprove(selected)"></button>
                     </div>
@@ -334,6 +348,8 @@ import { PmocArtViewerComponent } from './pmoc-art-viewer.component';
                 <div *ngIf="selected" class="p-4">
                     <p-panel header="Informações gerais" class="mb-3">
                         <div class="text-base"><strong>Cliente:</strong> {{ selected.cliente }}</div>
+                        <div class="text-base"><strong>ID do atendimento:</strong> {{ selected.id }}</div>
+                        <div class="text-base"><strong>ID do PMOC:</strong> {{ selected.pmocId }}</div>
                         <div class="text-base"><strong>Equipamento:</strong> {{ selected.equipamento }}</div>
                         <div class="text-base" *ngIf="selected.dataManutencao"><strong>Data manutenção:</strong> {{ selected.dataManutencao | date: 'dd/MM/yyyy' }}</div>
                         <div *ngIf="selected.proximaManutencao" class="text-base">
@@ -382,12 +398,12 @@ import { PmocArtViewerComponent } from './pmoc-art-viewer.component';
             </p-drawer>
 
             <!-- Approve dialog -->
-            <p-dialog header="Aprovar PMOC" [(visible)]="approveDialogVisible" [modal]="true" [closable]="false" [style]="{ width: currentViewportWidth <= drawerBreakpointPx ? '90vw' : '30rem' }">
+            <p-dialog header="Aprovar Atendimento" [(visible)]="approveDialogVisible" [modal]="true" [closable]="false" [style]="{ width: currentViewportWidth <= drawerBreakpointPx ? '90vw' : '30rem' }">
                 <div *ngIf="approveSelected">
                     <div class="mb-3">
                         <label class="flex items-center gap-2">
                             <input type="checkbox" [(ngModel)]="approveConfirmed" />
-                            <span>Eu {{ approveSelected.cliente }} confirmo a execução da {{ approveSelected.id }}</span>
+                            <span>Eu {{ approveSelected.cliente }} confirmo a execução do atendimento {{ approveSelected.id }} (PMOC: {{ approveSelected.pmocId }})</span>
                         </label>
                     </div>
 
@@ -401,10 +417,11 @@ import { PmocArtViewerComponent } from './pmoc-art-viewer.component';
     `
 })
 export class PmocClientComponent implements OnInit {
-    pending: PmocSummary[] = [];
-    approved: PmocSummary[] = [];
-    selected: PmocSummary | null = null;
-    artSelected: PmocSummary | null = null;
+    // now showing attendance-level cards (each attendance references a PMOC via pmocId)
+    pending: Attendance[] = [];
+    approved: Attendance[] = [];
+    selected: Attendance | null = null;
+    artSelected: any | null = null;
     artContent: string | null = null;
     // controls the visibility of the custom right-side drawer
     drawerVisible = false;
@@ -443,13 +460,13 @@ export class PmocClientComponent implements OnInit {
     selectedStatus: string | null = null;
     statusOptions: Array<{ label: string; value: string }> = [
         { label: 'Pendente', value: 'Pendente' },
-        { label: 'Aprovada', value: 'Aprovada' },
+        { label: 'Aprovado', value: 'Aprovado' },
         { label: 'Vencido', value: 'Vencido' }
     ];
 
-    // keep master copies so filters can be reapplied without losing original lists
-    private allPending: PmocSummary[] = [];
-    private allApproved: PmocSummary[] = [];
+    // keep master copies so filters can be reapplied without losing original lists (attendance-level)
+    private allPending: Attendance[] = [];
+    private allApproved: Attendance[] = [];
 
     constructor(
         private svc: PmocClientService,
@@ -466,20 +483,21 @@ export class PmocClientComponent implements OnInit {
         this.route.paramMap.subscribe((pm) => {
             const cid = pm.get('clientId');
             this.clientId = cid;
-            // load master lists first, then apply current filters
-            this.allPending = this.svc.getPending(cid || undefined);
-            this.allApproved = this.svc.getApproved(cid || undefined);
+            // load attendance-level lists for this client and split pending/approved
+            const attendances = this.svc.getAttendances(cid || undefined);
+            this.allPending = attendances.filter((a) => a.status === 'pending');
+            this.allApproved = attendances.filter((a) => a.status === 'approved');
             this.applyFilters();
         });
     }
 
-    // approval dialog state
-    approveSelected: PmocSummary | null = null;
+    // approval dialog state (attendance-level)
+    approveSelected: Attendance | null = null;
     approveDialogVisible = false;
     approveConfirmed = false;
 
-    openApprove(p: PmocSummary) {
-        this.approveSelected = p;
+    openApprove(p: Attendance) {
+        this.approveSelected = p as any;
         this.approveConfirmed = false;
         this.approveDialogVisible = true;
     }
@@ -492,9 +510,13 @@ export class PmocClientComponent implements OnInit {
 
     confirmApprove() {
         if (!this.approveSelected) return;
-        // naive: move item from pending to approved (update master lists and reapply filters)
-        this.allPending = this.allPending.filter((x) => x.id !== this.approveSelected!.id);
-        this.allApproved = [this.approveSelected, ...this.allApproved];
+        // Move attendance from pending to approved (local mock update)
+        const aid = (this.approveSelected as any).id;
+        this.allPending = this.allPending.filter((x) => x.id !== aid);
+        // ensure approved has up-to-date object
+        const approvedItem = this.approveSelected as any;
+        approvedItem.status = 'approved';
+        this.allApproved = [approvedItem, ...this.allApproved];
         this.applyFilters();
         this.cancelApprove();
     }
@@ -502,19 +524,20 @@ export class PmocClientComponent implements OnInit {
     applyFilters() {
         const term = (this.searchTerm || '').toString().trim().toLowerCase();
 
-        const matches = (item: PmocSummary) => {
-            // search by id or equipamento
+        const matches = (item: Attendance) => {
+            // search by attendance id, pmoc id or equipamento
             if (term) {
                 const id = (item.id || '').toString().toLowerCase();
+                const pmocId = (item.pmocId || '').toString().toLowerCase();
                 const eq = (item.equipamento || '').toString().toLowerCase();
-                if (!id.includes(term) && !eq.includes(term)) return false;
+                if (!id.includes(term) && !pmocId.includes(term) && !eq.includes(term)) return false;
             }
             // status filter
             if (this.selectedStatus) {
                 if (this.selectedStatus === 'Vencido') {
-                    if (!this.isExpiredSafe(item)) return false;
+                    if (!this.isExpiredSafe(item as any)) return false;
                 } else {
-                    const label = this.getStatusLabel(item);
+                    const label = this.getStatusLabel(item as any);
                     if (label !== this.selectedStatus) return false;
                 }
             }
@@ -532,7 +555,7 @@ export class PmocClientComponent implements OnInit {
         this.applyFilters();
     }
 
-    viewDetails(p: PmocSummary) {
+    viewDetails(p: Attendance) {
         this.selected = p;
         this.drawerVisible = true;
     }
@@ -542,9 +565,10 @@ export class PmocClientComponent implements OnInit {
         this.drawerVisible = false;
     }
 
-    viewArt(p: PmocSummary) {
+    viewArt(p: any) {
+        // Attendance links to a PMOC via pmocId; show ART for that PMOC
         this.artSelected = p;
-        this.artContent = this.svc.getArtFor(p.id);
+        this.artContent = this.svc.getArtFor(p.pmocId || p.id);
     }
 
     closeArt() {
@@ -553,7 +577,7 @@ export class PmocClientComponent implements OnInit {
     }
 
     // helper: return true if the given PMOC is currently pending
-    isPending(p: PmocSummary | null): boolean {
+    isPending(p: any | null): boolean {
         if (!p) return false;
         return this.pending.some((x) => x.id === p.id);
     }
@@ -569,10 +593,49 @@ export class PmocClientComponent implements OnInit {
         const td = new Date(t.getFullYear(), t.getMonth(), t.getDate());
         const diffMs = nd.getTime() - td.getTime();
         const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
-        if (diffDays < 0) return 'Vencida';
+        if (diffDays < 0) return 'Vencido';
         if (diffDays === 0) return 'Hoje';
         if (diffDays <= 7) return `Em ${diffDays}d`;
         return 'Agendado';
+    }
+
+    // Compute effective next maintenance date: prefer explicit proximaManutencao, otherwise compute from dataManutencao + periodicidade
+    getEffectiveNextMaintenance(p: PmocSummary): Date | null {
+        if (!p) return null;
+        if (p.proximaManutencao) return new Date(p.proximaManutencao);
+        if (!p.dataManutencao) return null;
+        // if periodicidade provided, take the first entry as primary
+        const months = this.periodsToMonths(p.periodicidade);
+        const base = new Date(p.dataManutencao);
+        if (isNaN(base.getTime())) return null;
+        const d = new Date(base.getFullYear(), base.getMonth(), base.getDate());
+        d.setMonth(d.getMonth() + months);
+        return d;
+    }
+
+    getEffectiveNextMaintenanceLabel(p: PmocSummary): string {
+        const d = this.getEffectiveNextMaintenance(p);
+        if (!d) return '—';
+        return this.nextMaintenanceLabel(d);
+    }
+
+    // CSS class selector for the next-maint row based on urgency
+    getNextMaintClass(p: PmocSummary) {
+        const d = this.getEffectiveNextMaintenance(p);
+        if (!d) return 'next-maint-row';
+        if (this.isExpired(d)) return 'next-maint-expired';
+        if (this.isNearExpiry(d)) return 'next-maint-alert';
+        return 'next-maint-row';
+    }
+
+    // convert periodicidade array to months (use first entry or default to 1 month)
+    periodsToMonths(periods?: string[] | null): number {
+        if (!periods || !periods.length) return 1;
+        const p = (periods[0] || '').toString().toUpperCase();
+        if (p.includes('TRIM')) return 3;
+        if (p.includes('SEM')) return 6;
+        if (p.includes('AN') || p.includes('ANO')) return 12;
+        return 1;
     }
 
     // helper: map label urgency to PrimeNG badge severity
@@ -645,9 +708,9 @@ export class PmocClientComponent implements OnInit {
         if (!p) return '';
         // assume PMOC has a status property; normalize common English/Portuguese values
         const raw = (p as any).status;
-        if (!raw) return this.pending.some((x) => x.id === p.id) ? 'Pendente' : 'Aprovada';
+        if (!raw) return this.pending.some((x) => x.id === p.id) ? 'Pendente' : 'Aprovado';
         const s = raw.toString().trim().toLowerCase();
-        if (s.includes('aprov') || s.includes('approved')) return 'Aprovada';
+        if (s.includes('aprov') || s.includes('approved')) return 'Aprovado';
         if (s.includes('pend') || s.includes('pending')) return 'Pendente';
         if (s.includes('venc') || s.includes('overdue') || s.includes('expired')) return 'Vencido';
         // fallback: capitalize the raw status
@@ -658,7 +721,7 @@ export class PmocClientComponent implements OnInit {
     getStatusSeverity(p: PmocSummary | null): 'success' | 'warn' | 'danger' | 'info' {
         if (!p) return 'info';
         const raw = (p as any).status;
-        const status = (raw ? raw.toString() : this.pending.some((x) => x.id === p.id) ? 'Pendente' : 'Aprovada').toLowerCase();
+        const status = (raw ? raw.toString() : this.pending.some((x) => x.id === p.id) ? 'Pendente' : 'Aprovado').toLowerCase();
         if (status.includes('aprov') || status.includes('approved')) return 'success';
         if (status.includes('pend') || status.includes('pending')) return 'warn';
         if (status.includes('venc') || status.includes('overdue') || status.includes('expired')) return 'danger';

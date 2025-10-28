@@ -27,6 +27,7 @@ export class PmocClientService {
         {
             id: 'PMOC-001',
             cliente: 'BHIO SUPPLY | ESTEIO - RS',
+            clientId: 'demo-client',
             equipamento: 'AC001',
             dataManutencao: '2025-10-01',
             proximaManutencao: '2026-04-01',
@@ -132,6 +133,16 @@ export class PmocClientService {
         }
     ];
 
+    // ART store: map clientId -> { name, base64 }
+    // In production this comes from server storage; here we include one demo entry.
+    private artStore: Record<string, { name: string; base64: string }> = {
+        'demo-client': {
+            name: 'ART-demo-client.pdf',
+            // Small single-page PDF (base64) for demo purposes
+            base64: 'JVBERi0xLjMKJeLjz9MKMSAwIG9iago8PCAvVHlwZSAvQ2F0YWxvZyAvUGFnZXMgMiAwIFIgPj4KZW5kb2JqCjIgMCBvYmoKPDwgL1R5cGUgL1BhZ2VzIC9LaWRzIFsgMyAwIFIgXSAvQ291bnQgMSA+PgplbmRvYmoKMyAwIG9iago8PCAvVHlwZSAvUGFnZSAvUGFyZW50IDIgMCBSIC9NZWRpYUJveCBbMCAwIDU5NSA4NDJdIC9Db250ZW50cyA0IDAgUiAvUmVzb3VyY2VzIDw8IC9Gb250IDw8IC9GMSA1IDAgUiA+PiA+PiA+PgplbmRvYmoKNCAwIG9iago8PCAvTGVuZ3RoIDY1ID4+CnN0cmVhbQpCVAovRiAxMiBUZCAxMCAxMDAgVGQgKEhlbGxvLCBXb3JsZCkhClRkCmVuZHN0cmVhbQplbmRvYmoKNSAwIG9iago8PCAvVHlwZSAvRm9udCAvU3VidHlwZSAvVHlwZTEgL05hbWUgL0YxIC9CYXNlRm9udCAvSGVsdmV0aWNhID4+CmVuZG9iagp4cmVmCjAgNgowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMTkgMDAwMDAgbiAKMDAwMDAwMDA5NSAwMDAwMCBuIAowMDAwMDAwMTk4IDAwMDAwIG4gCjAwMDAwMDAyNjAgMDAwMDAgbiAKdHJhaWxlcgo8PCAvUm9vdCAxIDAgUiAvU2l6ZSA2ID4+CnN0YXJ0eHJlZgozMDYKJSVFT0YK'
+        }
+    };
+
     // optionally filter by clientId (if provided)
     getPending(clientId?: string): PmocSummary[] {
         return this.items.filter(i => i.status === 'pending' && (clientId ? i.clientId === clientId : true));
@@ -149,5 +160,38 @@ export class PmocClientService {
         const i = this.getById(id);
         if (!i) return null;
         return `ART para ${i.id} — Cliente: ${i.cliente} — Equipamento: ${i.equipamento}`;
+    }
+
+    // Return a mock PDF (base64) for a given clientId. In production this will be an HTTP call
+    // that returns the PDF bytes stored in a blob or fetched via signed URL.
+    getArtBase64ForClient(clientId?: string): { name: string; base64: string } | null {
+        if (!clientId) return null;
+        // return explicit art if available
+        const found = this.artStore[clientId];
+        if (found) return found;
+        // fallback: return a minimal placeholder PDF so UI can demonstrate the viewer
+        const base64 = 'JVBERi0xLjMKJeLjz9MKMSAwIG9iago8PCAvVHlwZSAvQ2F0YWxvZyAvUGFnZXMgMiAwIFIgPj4KZW5kb2JqCjIgMCBvYmoKPDwgL1R5cGUgL1BhZ2VzIC9LaWRzIFsgMyAwIFIgXSAvQ291bnQgMSA+PgplbmRvYmoKMyAwIG9iago8PCAvVHlwZSAvUGFnZSAvUGFyZW50IDIgMCBSIC9NZWRpYUJveCBbMCAwIDU5NSA4NDJdIC9Db250ZW50cyA0IDAgUiAvUmVzb3VyY2VzIDw8IC9Gb250IDw8IC9GMSA1IDAgUiA+PiA+PiA+PgplbmRvYmoKNCAwIG9iago8PCAvTGVuZ3RoIDY1ID4+CnN0cmVhbQpCVAovRiAxMiBUZCAxMCAxMDAgVGQgKEhlbGxvLCBXb3JsZCkhClRkCmVuZHN0cmVhbQplbmRvYmoKNSAwIG9iago8PCAvVHlwZSAvRm9udCAvU3VidHlwZSAvVHlwZTEgL05hbWUgL0YxIC9CYXNlRm9udCAvSGVsdmV0aWNhID4+CmVuZG9iagp4cmVmCjAgNgowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMTkgMDAwMDAgbiAKMDAwMDAwMDA5NSAwMDAwMCBuIAowMDAwMDAwMTk4IDAwMDAwIG4gCjAwMDAwMDAyNjAgMDAwMDAgbiAKdHJhaWxlcgo8PCAvUm9vdCAxIDAgUiAvU2l6ZSA2ID4+CnN0YXJ0eHJlZgozMDYKJSVFT0YK';
+        return { name: `ART-${clientId}.pdf`, base64 };
+    }
+
+    // Convert the base64 placeholder into a Blob for client-side viewing/downloading
+    getArtBlobForClient(clientId?: string): Blob | null {
+        const entry = this.getArtBase64ForClient(clientId);
+        if (!entry) return null;
+        try {
+            console.debug('getArtBlobForClient: decoding base64 length=', entry.base64.length, 'for', entry.name);
+            const byteCharacters = atob(entry.base64);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: 'application/pdf' });
+            console.debug('getArtBlobForClient: created blob size=', blob.size);
+            return blob;
+        } catch (err) {
+            console.error('getArtBlobForClient: failed to decode base64 for clientId=', clientId, err);
+            return null;
+        }
     }
 }

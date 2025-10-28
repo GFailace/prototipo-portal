@@ -11,6 +11,26 @@ import { LayoutService } from '../service/layout.service';
     selector: 'app-layout',
     standalone: true,
     imports: [CommonModule, AppTopbar, AppSidebar, RouterModule, AppFooter],
+    styles: [
+        `:host { display: block }`
+    ,
+    `
+        /* Ensure the overall layout stretches to the full viewport and footer stays at the bottom. */
+        .layout-wrapper {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .layout-main-container {
+            display: flex;
+            flex-direction: column;
+            flex: 1 1 auto;
+        }
+        .layout-main {
+            flex: 1 1 auto;
+        }
+    `
+    ],
     template: `<div class="layout-wrapper" [ngClass]="containerClass">
         <app-topbar></app-topbar>
         <app-sidebar></app-sidebar>

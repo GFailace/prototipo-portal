@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FluidModule } from 'primeng/fluid';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
@@ -31,49 +31,74 @@ const CHECKLIST_LABELS: Record<string, string> = {
 @Component({
     selector: 'app-pmocs-list',
     standalone: true,
-    imports: [
-        CommonModule,
-        InputTextModule,
-        FluidModule,
-        ButtonModule,
-        SelectModule,
-        FormsModule,
-        ReactiveFormsModule,
-        TextareaModule,
-    TableModule,
-    CheckboxModule,
-        ToastModule,
-        ConfirmDialogModule,
-        InputNumberModule,
-        FileUploadModule
-    ],
+    imports: [CommonModule, InputTextModule, FluidModule, ButtonModule, SelectModule, FormsModule, ReactiveFormsModule, TextareaModule, TableModule, CheckboxModule, ToastModule, ConfirmDialogModule, InputNumberModule, FileUploadModule],
     template: `<p-fluid>
         <p-toast></p-toast>
         <p-confirmDialog></p-confirmDialog>
         <div class="card">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
-                <div class="font-semibold text-2xl break-words">Lista de PMOCs</div>
-                <p-button label="Novo PMOC" icon="pi pi-plus" iconPos="left" class="p-button-sm w-full sm:w-auto" (onClick)="goCreate()"></p-button>
+                <!-- Search toolbar: searches by ID, equipamento, cliente and filters by status -->
+                <div class="search-bar w-full sm:flex-1">
+                    <span class="p-input-icon-left search-input">
+                        <i class="pi pi-search"></i>
+                        <input pInputText type="text" placeholder="Pesquisar por ID, equipamento ou cliente" [(ngModel)]="searchTerm" (input)="applyFilters()" />
+                    </span>
+                    <div class="controls">
+                        <div class="select-wrap">
+                            <select class="p-inputtext" [(ngModel)]="selectedStatus" (change)="applyFilters()">
+                                <option [ngValue]="null">Todos</option>
+                                <option *ngFor="let o of statusOptions" [ngValue]="o.value">{{ o.label }}</option>
+                            </select>
+                        </div>
+                        <button pButton type="button" icon="pi pi-times" class="p-button-text clear-button" (click)="clearFilters()" aria-label="Limpar filtros">Limpar pesquisa</button>
+                    </div>
+                </div>
+                <div class="mt-2 sm:mt-0">
+                    <p-button label="Novo PMOC" icon="pi pi-plus" iconPos="left" class="p-button-sm w-full sm:w-auto" (onClick)="goCreate()"></p-button>
+                </div>
             </div>
 
-            <ng-container *ngIf="pmocs$ | async as pmocs">
+            <div *ngIf="visiblePmocs && visiblePmocs.length > 0; else noPmocs">
                 <div class="flex flex-col gap-3">
-                    <div *ngFor="let p of pmocs" class="p-4 sm:p-4 rounded border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 shadow-sm sm:shadow-none">
-                        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                    <div *ngFor="let p of visiblePmocs" class="p-4 sm:p-4 rounded border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 shadow-sm sm:shadow-none pmoc-card">
+                        <div class="flex justify-between items-start">
                             <div>
-                                <div class="font-semibold text-lg sm:text-xl">{{ p.cliente }}</div>
-                                <div class="text-sm sm:text-base text-muted-color">{{ p.equipamento }}</div>
-                                <div class="text-sm mt-1">Status: {{ p.statusEquipamento || '-' }}</div>
+                                <div class="font-semibold text-lg pmoc-title">{{ p.cliente }}</div>
+                                <div class="text-sm mt-2 pmoc-id">
+                                    ID: <strong>{{ p.id }}</strong>
+                                </div>
+                                <div class="text-sm text-muted pmoc-equip">
+                                    Equipamento: <strong>{{ p.equipamento }}</strong>
+                                </div>
+                                <div class="mt-1">
+                                    <span class="text-sm">Status do equipamento:</span>
+                                    <span class="ml-2 text-sm font-medium">{{ p.statusEquipamento || '-' }}</span>
+                                </div>
+
+                                <div class="text-sm text-muted">
+                                    Data Manutenção: <strong>{{ p.dataManutencao | date: 'dd/MM/yyyy' }}</strong>
+                                </div>
+
+                                <div *ngIf="p.proximaManutencao" class="text-base mt-1" [ngClass]="isExpired(p.proximaManutencao) ? 'next-maint-expired' : isNearExpiry(p.proximaManutencao) ? 'next-maint-alert' : 'next-maint-row'">
+                                    <span class="font-semibold">Próxima manutenção:</span>
+                                    <span class="ml-2 font-medium">{{ p.proximaManutencao | date: 'dd/MM/yyyy' }}</span>
+                                    <span *ngIf="isExpired(p.proximaManutencao)" class="ml-3 text-sm font-semibold">— Vencido ({{ daysOverdue(p.proximaManutencao) }}d)</span>
+                                    <span *ngIf="!isExpired(p.proximaManutencao) && isNearExpiry(p.proximaManutencao)" class="ml-3 text-sm text-muted">— Próxima do vencimento ({{ daysUntil(p.proximaManutencao) }}d)</span>
+                                </div>
                             </div>
+
                             <div class="text-sm sm:text-xs text-muted-color mt-2 sm:mt-0">{{ p.dataManutencao | date: 'dd/MM/yyyy' }}</div>
                         </div>
 
-                        <div class="mt-3 flex items-center justify-between">
-                            <div class="text-sm">Responsável: {{ p.responsavel }}</div>
-                        </div>
-                        <div class="mt-3 flex flex-col sm:flex-row items-center gap-2 justify-start sm:mt-0 sm:justify-end">
-                            <p-button label="Detalhes" class="w-full sm:w-auto p-button-text" (onClick)="toggleExpand(p, $event)"></p-button>
-                            <p-button label="Excluir" class="w-full sm:w-auto p-button-text p-button-danger" (onClick)="deletePmoc(p.id)"></p-button>
+                        <!-- Responsive footer: status badge + actions -->
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pmoc-footer">
+                            <div class="text-sm">
+                                Responsável: <strong class="ml-1">{{ p.responsavel }}</strong>
+                            </div>
+                            <div class="flex gap-2">
+                                <button pButton type="button" label="Detalhes" class="p-button-text p-button-sm" (click)="toggleExpand(p, $event)"></button>
+                                <button pButton type="button" label="Excluir" class="p-button-text p-button-danger p-button-sm" (click)="deletePmoc(p.id)"></button>
+                            </div>
                         </div>
 
                         <div class="expand-panel mt-4 overflow-hidden" [class.open]="expandedPmocId === p.id">
@@ -122,11 +147,169 @@ const CHECKLIST_LABELS: Record<string, string> = {
                         </div>
                     </div>
                 </div>
-            </ng-container>
+            </div>
+            <ng-template #noPmocs>
+                <div class="text-sm text-muted">Nenhum PMOC encontrado.</div>
+            </ng-template>
         </div>
     </p-fluid>`,
     styles: [
         `
+            /* PMOC list local styles: search bar (same format as pmoc-client) */
+            .search-bar {
+                display: flex;
+                gap: 0.75rem;
+                align-items: center;
+                max-width: 900px; /* keep the search area from growing too wide on large screens */
+                flex-wrap: nowrap; /* avoid wrapping controls on wide screens */
+            }
+            .p-input-icon-left.search-input {
+                flex: 1 1 auto;
+                min-width: 0;
+                position: relative;
+                /* reserve a smaller space for select + clear so the input can grow more on medium/large screens */
+                max-width: calc(100% - 160px);
+            }
+            .p-input-icon-left.search-input .pi {
+                position: absolute;
+                left: 0.75rem;
+                top: 50%;
+                transform: translateY(-50%);
+                color: var(--text-color-secondary, #6b7280);
+            }
+            .p-input-icon-left.search-input input.p-inputtext {
+                padding-left: 2.4rem;
+                width: 100%;
+            }
+            .select-wrap {
+                position: relative;
+                display: inline-block;
+                width: 11rem;
+                flex: 0 0 auto;
+                margin-left: 0.5rem;
+            }
+            .select-wrap select {
+                appearance: none;
+                -webkit-appearance: none;
+                -moz-appearance: none;
+                padding: 0.35rem 1.6rem 0.35rem 0.7rem;
+                border: 1px solid var(--p-textarea-border-color, var(--surface-border, #d1d5db));
+                border-radius: 0.25rem;
+                background: var(--p-textarea-background, #fff);
+                color: var(--text-color, #374151);
+                font-size: 0.95rem;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .select-wrap::after {
+                content: '\u203A';
+                position: absolute;
+                right: 0.6rem;
+                top: 50%;
+                transform: translateY(-50%) rotate(90deg);
+                color: var(--p-primary-color, #ff7a18);
+                opacity: 0.65;
+                pointer-events: none;
+            }
+            /* Dark mode adjustments for the native select to match PrimeNG theme tokens */
+            :host-context(.app-dark) .select-wrap select,
+            :host-context(.dark) .select-wrap select {
+                background: var(--surface-card, var(--surface-0, #111827));
+                color: var(--text-color, #f3f4f6);
+                border-color: var(--surface-border, rgba(255, 255, 255, 0.06));
+            }
+            :host-context(.app-dark) .select-wrap::after,
+            :host-context(.dark) .select-wrap::after {
+                color: var(--p-primary-color, #ff7a18);
+                opacity: 0.85;
+            }
+            .controls {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                flex-shrink: 0;
+            }
+
+            .clear-button {
+                border-radius: 9999px;
+                background: transparent;
+                color: var(--p-primary-color, #ff7a18);
+                padding: 0.25rem 0.5rem;
+                white-space: nowrap; /* keep icon + text on single line */
+                margin-left: 0.25rem;
+            }
+            @media (max-width: 640px) {
+                .search-bar {
+                    flex-direction: column;
+                    align-items: stretch;
+                    width: 100%;
+                    max-width: none;
+                    flex-wrap: wrap; /* allow stack on small screens */
+                }
+                .select-wrap {
+                    width: 100%;
+                    margin-left: 0; /* remove left margin when stacked */
+                }
+                .p-input-icon-left.search-input {
+                    max-width: none;
+                    width: 100%;
+                }
+                .p-input-icon-left.search-input input.p-inputtext {
+                    width: 100%;
+                }
+                .p-button .p-button-label {
+                    display: none;
+                }
+            }
+            .pmoc-card {
+                padding: 0.95rem 1rem;
+                margin-top: 0.25rem;
+                margin-bottom: 0.25rem;
+            }
+            .pmoc-title {
+                font-size: 1.05rem;
+                letter-spacing: -0.2px;
+                font-weight: 600;
+            }
+            .pmoc-id {
+                margin-top: 0.35rem;
+                color: rgba(0, 0, 0, 0.65);
+                display: block;
+            }
+            .pmoc-equip {
+                margin-top: 0.25rem;
+            }
+            .pmoc-footer {
+                margin-top: 0.5rem;
+                padding-top: 0.5rem;
+                border-top: 1px solid var(--surface-border, rgba(0, 0, 0, 0.06));
+            }
+
+            /* next maintenance visual variants */
+            .next-maint-row {
+                background-color: var(--surface-card, var(--surface-ground, rgba(0, 0, 0, 0.02))) !important;
+                border-left: 4px solid var(--surface-border, rgba(0, 0, 0, 0.06)) !important;
+                color: var(--text-color, inherit) !important;
+                padding: 0.5rem;
+                border-radius: 0.375rem;
+            }
+            .next-maint-alert {
+                background-color: var(--surface-hover, var(--surface-overlay, rgba(255, 245, 230, 0.9))) !important;
+                border-left: 4px solid var(--pmoc-next-alert-accent, var(--p-primary-color, rgba(255, 165, 0, 0.7))) !important;
+                color: var(--text-color, inherit) !important;
+                padding: 0.5rem;
+                border-radius: 0.375rem;
+                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+            }
+            .next-maint-expired {
+                background-color: var(--surface-hover, var(--surface-overlay, rgba(253, 236, 234, 0.98))) !important;
+                border-left: 4px solid var(--pmoc-next-expired-accent, rgba(220, 53, 69, 0.9)) !important;
+                color: var(--text-color, inherit) !important;
+                padding: 0.5rem;
+                border-radius: 0.375rem;
+                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+            }
+
             :host ::ng-deep .pmoc-fileupload .p-fileupload-upload,
             :host ::ng-deep .pmoc-fileupload .p-fileupload-cancel {
                 display: none !important;
@@ -206,10 +389,18 @@ export class ListarPmocs {
     editMode = false;
     editForm!: FormGroup;
 
+    // local filtered list and search controls
+    allPmocs: Pmoc[] = [];
+    visiblePmocs: Pmoc[] = [];
+    searchTerm: string = '';
+    selectedStatus: string | null = null;
+    // reusing existing statusOptions defined further down in the file
+
     // Options copied from criarPmoc
+    // Use the actual status label as the value so filtering compares the same strings
     statusOptions = [
-        { label: 'EM OPERAÇÃO', value: 'em_operacao' },
-        { label: 'FORA DE OPERAÇÃO', value: 'fora_de_operacao' }
+        { label: 'EM OPERAÇÃO', value: 'EM OPERAÇÃO' },
+        { label: 'FORA DE OPERAÇÃO', value: 'FORA DE OPERAÇÃO' }
     ];
 
     clienteOptions = [
@@ -313,8 +504,70 @@ export class ListarPmocs {
         });
     }
 
+    ngOnInit(): void {
+        // subscribe to the source observable and keep a local copy for filtering
+        this.pmocService.pmocs$.subscribe((list) => {
+            this.allPmocs = list || [];
+            this.applyFilters();
+        });
+    }
+
+    applyFilters() {
+        const term = (this.searchTerm || '').toString().trim().toLowerCase();
+        const matches = (item: Pmoc) => {
+            if (term) {
+                const id = (item.id || '').toString().toLowerCase();
+                const eq = (item.equipamento || '').toString().toLowerCase();
+                const cl = (item.cliente || '').toString().toLowerCase();
+                if (!id.includes(term) && !eq.includes(term) && !cl.includes(term)) return false;
+            }
+            if (this.selectedStatus && this.selectedStatus !== null) {
+                if ((item.statusEquipamento || '').toLowerCase() !== String(this.selectedStatus).toLowerCase()) return false;
+            }
+            return true;
+        };
+
+        this.visiblePmocs = this.allPmocs.filter(matches);
+    }
+
+    clearFilters() {
+        this.searchTerm = '';
+        this.selectedStatus = null;
+        this.applyFilters();
+    }
+
+    // days from today until the given date (positive if future, negative if past)
+    daysUntil(dateStr: string | Date): number {
+        const d = typeof dateStr === 'string' ? new Date(dateStr) : dateStr;
+        const today = new Date();
+        const nd = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+        const td = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+        return Math.round((nd - td) / (1000 * 60 * 60 * 24));
+    }
+
+    // returns true if date is within the next 30 days (including today)
+    isNearExpiry(dateStr: string | Date): boolean {
+        const days = this.daysUntil(dateStr);
+        return days >= 0 && days <= 30;
+    }
+
+    // returns true if the given date is strictly before today (expired)
+    isExpired(dateStr: string | Date): boolean {
+        const d = typeof dateStr === 'string' ? new Date(dateStr) : dateStr;
+        const today = new Date();
+        const nd = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+        const td = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+        return nd < td;
+    }
+
+    // returns number of days overdue (positive integer) if expired, else 0
+    daysOverdue(dateStr: string | Date): number {
+        if (!this.isExpired(dateStr)) return 0;
+        return Math.abs(this.daysUntil(dateStr));
+    }
+
     goEdit(id?: string | null, evt?: Event) {
-    if (evt && typeof evt.stopPropagation === 'function') evt.stopPropagation();
+        if (evt && typeof evt.stopPropagation === 'function') evt.stopPropagation();
         if (!id) return;
         this.router.navigateByUrl(`/pages/pmocs/editar/${id}`).catch((err) => console.error('Navigation failed', err));
     }
@@ -413,16 +666,16 @@ export class ListarPmocs {
             checklistObj[item.controlName] = !!formValue[item.controlName];
         }
 
-    // Ensure date fields are Date objects and convert to ISO strings for the service (use iso-safe parser)
-    const dataManutencao = formValue.dataManutencao ? this.parseDateFromIso(formValue.dataManutencao) : null;
-    const proximaManutencao = formValue.proximaManutencao ? this.parseDateFromIso(formValue.proximaManutencao) : null;
+        // Ensure date fields are Date objects and convert to ISO strings for the service (use iso-safe parser)
+        const dataManutencao = formValue.dataManutencao ? this.parseDateFromIso(formValue.dataManutencao) : null;
+        const proximaManutencao = formValue.proximaManutencao ? this.parseDateFromIso(formValue.proximaManutencao) : null;
 
         const updated: Pmoc = {
             ...this.selectedPmoc,
             cliente: formValue.cliente,
             equipamento: formValue.equipamento,
-            dataManutencao: dataManutencao ? this.formatDateToIso(dataManutencao) as any : undefined,
-            proximaManutencao: proximaManutencao ? this.formatDateToIso(proximaManutencao) as any : undefined,
+            dataManutencao: dataManutencao ? (this.formatDateToIso(dataManutencao) as any) : undefined,
+            proximaManutencao: proximaManutencao ? (this.formatDateToIso(proximaManutencao) as any) : undefined,
             tipoManutencao: formValue.tipoManutencao,
             statusEquipamento: formValue.statusEquipamento,
             responsavel: formValue.responsavel,
@@ -526,7 +779,9 @@ export class ListarPmocs {
         return isNaN(n) ? null : n;
     }
 
-    private pad(n: number) { return n < 10 ? '0' + n : String(n); }
+    private pad(n: number) {
+        return n < 10 ? '0' + n : String(n);
+    }
 
     private formatDateToIso(d: Date): string {
         return `${d.getFullYear()}-${this.pad(d.getMonth() + 1)}-${this.pad(d.getDate())}`;

@@ -51,6 +51,10 @@ export class ClientMenu {
                 items: [{ label: 'Minhas PMOCs', icon: 'pi pi-fw pi-file', routerLink: [...baseLink, 'pmocs'] }]
             },
             {
+                label: 'Equipamentos',
+                items: [{ label: 'Meus Equipamentos', icon: 'pi pi-fw pi-cog', routerLink: [...baseLink, 'equipamentos'] }]
+            },
+            {
                 label: 'ART',
                 items: [{ label: 'Visualizar ART', icon: 'pi pi-fw pi-file-pdf', routerLink: [...baseLink, 'art'], fragment: 'art' }]
             }

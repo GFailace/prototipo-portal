@@ -6,15 +6,14 @@ import { Landing } from './app/pages/landing/landing';
 import { Notfound } from './app/pages/notfound/notfound';
 import { ClientLayout } from './app/layout/component/client.layout';
 import { ClientAuthGuard } from './app/layout/service/client-auth.guard';
+import { ListarPmocs } from '@/pages/pmocs/listarPmocs';
 
 export const appRoutes: Routes = [
     {
         path: '',
         component: AppLayout,
         children: [
-            { path: '', component: Dashboard },
-            { path: 'uikit', loadChildren: () => import('./app/pages/uikit/uikit.routes') },
-            { path: 'documentation', component: Documentation },
+            { path: '', component: ListarPmocs },
             { path: 'pages', loadChildren: () => import('./app/pages/pages.routes') }
         ]
     },
@@ -25,7 +24,10 @@ export const appRoutes: Routes = [
         component: ClientLayout,
         canActivate: [ClientAuthGuard],
         children: [
-            { path: 'pmocs', loadComponent: () => import('./app/client/pmoc-client/pmoc-client.component').then(m => m.PmocClientComponent) },
+            { path: 'pmocs', loadComponent: () => import('./app/client/pmoc-client/pmoc-client.component').then((m) => m.PmocClientComponent) },
+            { path: 'art', loadComponent: () => import('./app/client/pmoc-client/pmoc-art-viewer.component').then((m) => m.PmocArtViewerComponent) },
+            { path: 'equipamentos', loadComponent: () => import('./app/pages/clientes/client-equipments').then((m) => m.ClientEquipmentsComponent) },
+            { path: 'equipamentos/:id/schedule', loadComponent: () => import('./app/pages/clientes/equipamento-schedule.component').then((m) => m.EquipamentoScheduleComponent) },
             { path: '', redirectTo: 'pmocs', pathMatch: 'full' }
         ]
     },

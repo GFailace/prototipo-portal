@@ -11,6 +11,7 @@ import { PanelModule } from 'primeng/panel';
 import { DialogModule } from 'primeng/dialog';
 import { FormsModule } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
+import { PmocArtViewerComponent } from './pmoc-art-viewer.component';
 
 @Component({
     selector: 'app-pmoc-client',
@@ -20,6 +21,26 @@ import { InputTextModule } from 'primeng/inputtext';
         `
             :host {
                 display: block;
+            }
+
+            /* Increase the visual size of p-header used in this component so titles are more prominent */
+            p-header {
+                display: block;
+                font-size: 1.5rem; /* larger heading */
+                font-weight: 600;
+                color: var(--text-color, inherit);
+                margin-bottom: 0.5rem;
+                line-height: 1.2;
+            }
+
+            /* Slightly smaller sub-headers used for sections like "Pendentes de aprovação" / "Aprovadas" */
+            p-header.section-header {
+                display: block;
+                font-size: 1.125rem; /* smaller than the main title but still prominent */
+                font-weight: 600;
+                color: var(--text-color-secondary, var(--text-color, inherit));
+                margin-bottom: 0.25rem;
+                line-height: 1.25;
             }
 
             /* PMOC card typography and spacing tweaks */
@@ -83,22 +104,121 @@ import { InputTextModule } from 'primeng/inputtext';
                 border-radius: 0.375rem;
                 box-shadow: var(--pmoc-next-alert-shadow, 0 1px 2px rgba(0, 0, 0, 0.04));
             }
+            /* Search bar: place icon inside input and style select like the datepicker */
+            .search-bar {
+                display: flex;
+                gap: 0.75rem;
+                align-items: center;
+                max-width: 900px; /* keep the search area from growing too wide on large screens */
+            }
+            .p-input-icon-left.search-input {
+                flex: 1 1 auto;
+                min-width: 0;
+                position: relative;
+                max-width: calc(100% - 220px); /* reserve space for select + clear button */
+            }
+            .p-input-icon-left.search-input .pi {
+                position: absolute;
+                left: 0.75rem;
+                top: 50%;
+                transform: translateY(-50%);
+                color: var(--text-color-secondary, #6b7280);
+            }
+            .p-input-icon-left.search-input input.p-inputtext {
+                padding-left: 2.4rem;
+                width: 100%;
+            }
+            .select-wrap {
+                position: relative;
+                display: inline-block;
+                width: 12rem;
+            }
+            .select-wrap select {
+                appearance: none;
+                -webkit-appearance: none;
+                -moz-appearance: none;
+                padding: 0.35rem 1.6rem 0.35rem 0.7rem;
+                border: 1px solid var(--p-textarea-border-color, var(--surface-border, #d1d5db));
+                border-radius: 0.25rem;
+                background: var(--p-textarea-background, #fff);
+                color: var(--text-color, #374151);
+                font-size: 0.95rem;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .select-wrap::after {
+                content: '\u203A';
+                position: absolute;
+                right: 0.6rem;
+                top: 50%;
+                transform: translateY(-50%) rotate(90deg);
+                color: var(--p-primary-color, #ff7a18);
+                opacity: 0.65;
+                pointer-events: none;
+            }
+
+            /* Dark mode adjustments for the native select to match PrimeNG theme tokens */
+            :host-context(.app-dark) .select-wrap select,
+            :host-context(.dark) .select-wrap select {
+                background: var(--surface-card, var(--surface-0, #111827));
+                color: var(--text-color, #f3f4f6);
+                border-color: var(--surface-border, rgba(255, 255, 255, 0.06));
+            }
+            :host-context(.app-dark) .select-wrap::after,
+            :host-context(.dark) .select-wrap::after {
+                color: var(--p-primary-color, #ff7a18);
+                opacity: 0.85;
+            }
+            .clear-button {
+                border-radius: 9999px;
+            }
+
+            @media (max-width: 640px) {
+                .search-bar {
+                    flex-direction: column;
+                    align-items: stretch;
+                    /* allow the search toolbar to expand to the full available width on small devices */
+                    width: 100%;
+                    max-width: none;
+                }
+                .select-wrap {
+                    width: 100%;
+                }
+                .p-input-icon-left.search-input {
+                    /* let the text input grow to full width when stacked */
+                    max-width: none;
+                    width: 100%;
+                }
+                .p-input-icon-left.search-input input.p-inputtext {
+                    width: 100%;
+                }
+                .p-button .p-button-label {
+                    display: none;
+                }
+            }
         `
     ],
     template: `
         <div class="p-4">
             <p-header>Minhas PMOCs</p-header>
             <!-- Search toolbar -->
-            <div class="flex gap-3 items-center my-4">
-                <input pInputText type="text" placeholder="Pesquisar por ID ou equipamento" [(ngModel)]="searchTerm" (input)="applyFilters()" class="w-80" />
-                <select class="p-inputtext" [(ngModel)]="selectedStatus" (change)="applyFilters()">
-                    <option [ngValue]="null">Todos</option>
-                    <option *ngFor="let o of statusOptions" [value]="o.value">{{ o.label }}</option>
-                </select>
-                <button pButton type="button" icon="pi pi-times" class="p-button-text" (click)="clearFilters()"></button>
+            <div class="search-bar my-4">
+                <span class="p-input-icon-left search-input">
+                    <i class="pi pi-search"></i>
+                    <input pInputText type="text" placeholder="Pesquisar por ID ou equipamento" [(ngModel)]="searchTerm" (input)="applyFilters()" />
+                </span>
+                <div class="select-wrap">
+                    <select class="p-inputtext" [(ngModel)]="selectedStatus" (change)="applyFilters()">
+                        <option [ngValue]="null">Todos</option>
+                        <option *ngFor="let o of statusOptions" [value]="o.value">{{ o.label }}</option>
+                    </select>
+                </div>
+                <button pButton type="button" icon="pi pi-times" class="p-button-text clear-button" (click)="clearFilters()" aria-label="Limpar filtros">Limpar pesquisa</button>
             </div>
-            <div class="flex items-center justify-between mb-4 mt-4">
-                <h3 class="m-0">Pendentes de aprovação</h3>
+
+            <div class="mb-6">
+                <p-header class="section-header">Pendentes de aprovação</p-header>
+                <div *ngIf="pending.length === 0" class="text-sm text-muted mt-3">Nenhuma PMOC pendente.</div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -157,7 +277,7 @@ import { InputTextModule } from 'primeng/inputtext';
             </div>
 
             <div class="mt-6">
-                <h3>PMOCs Aprovadas</h3>
+                <p-header class="section-header">Aprovadas</p-header>
                 <div *ngIf="approved.length === 0" class="text-sm text-muted">Nenhuma PMOC aprovada.</div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
                     <div *ngFor="let p of approved" class="p-4 rounded border border-surface-200 dark:border-surface-700 bg-surface-0 dark:bg-surface-900 shadow-sm pmoc-card">

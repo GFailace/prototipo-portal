@@ -3,3 +3,31 @@
 @use './layout/layout.scss';
 @use 'primeicons/primeicons.css';
 @use './demo/demo.scss';
+
+/* Strong global layout rules to ensure footer sticks to bottom when page content is short.
+	 These rules use higher specificity and !important to override any conflicting styles in the theme. */
+html, body, app-root {
+	height: 100% !important;
+}
+
+body > .layout-wrapper, app-root > .layout-wrapper {
+	display: flex !important;
+	flex-direction: column !important;
+	min-height: 100vh !important;
+}
+
+.layout-main-container {
+	display: flex !important;
+	flex-direction: column !important;
+	flex: 1 1 auto !important;
+}
+
+.layout-main {
+	flex: 1 1 auto !important;
+}
+
+/* force footer to the bottom when page content is short across all layouts */
+.layout-footer {
+    margin-top: auto !important;
+}
+

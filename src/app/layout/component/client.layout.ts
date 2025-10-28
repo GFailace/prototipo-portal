@@ -20,8 +20,8 @@ import { LayoutService } from '../service/layout.service';
                 <div class="layout-content p-4" style="padding-left:1rem;padding-right:1rem">
                     <router-outlet></router-outlet>
                 </div>
-                <app-footer></app-footer>
             </div>
+            <app-footer></app-footer>
         </div>
         <div class="layout-mask animate-fadein"></div>
     </div>

@@ -88,14 +88,14 @@ import { RippleModule } from 'primeng/ripple';
                         </p-card>
 
                         <div>
-                            <button pButton type="button" label="Adicionar equipamento" icon="pi pi-plus" class="p-button-sm p-button-warning w-full" (click)="addEquipment()"></button>
+                            <button pButton type="button" icon="pi pi-plus" class="p-button-sm p-button-warning w-full flex-none whitespace-nowrap" (click)="addEquipment()">Adicionar equipamento</button>
                         </div>
                     </div>
                 </div>
 
                 <!-- Actions -->
                 <div class="flex justify-end mt-2">
-                    <button pButton type="submit" label="Salvar" class="p-button-warning"></button>
+                    <button pButton type="submit" class="p-button-warning flex-none whitespace-nowrap">Salvar</button>
                 </div>
             </div>
         </form>

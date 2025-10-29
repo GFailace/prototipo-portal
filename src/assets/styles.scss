@@ -5,6 +5,7 @@
 @use './demo/demo.scss';
 @use '../app/shared/_searchbar.scss';
 @use './pmocs/_pmoc-modal.scss';
+@use './utils/_inline-helpers.scss';
 
 /* Strong global layout rules to ensure footer sticks to bottom when page content is short.
 	 These rules use higher specificity and !important to override any conflicting styles in the theme. */

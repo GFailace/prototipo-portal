@@ -48,7 +48,7 @@ export class ClientMenu {
         this.model = [
             {
                 label: 'Atendimentos',
-                items: [{ label: 'Meus atendimentos', icon: 'pi pi-fw pi-wrench', routerLink: [...baseLink, 'pmocs'] }]
+                items: [{ label: 'Meus atendimentos', icon: 'pi pi-fw pi-wrench', routerLink: [...baseLink, 'atendimentos'] }]
             },
             {
                 label: 'Equipamentos',

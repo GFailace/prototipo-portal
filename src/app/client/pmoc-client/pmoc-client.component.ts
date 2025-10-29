@@ -191,9 +191,7 @@ import { InputTextModule } from 'primeng/inputtext';
                 .p-input-icon-left.search-input input.p-inputtext {
                     width: 100%;
                 }
-                .p-button .p-button-label {
-                    display: none;
-                }
+                /* keep default behavior for button labels; specialized hiding lives in shared/_searchbar.scss */
             }
         `
     ],
@@ -267,14 +265,14 @@ import { InputTextModule } from 'primeng/inputtext';
                             </div>
                             <!-- Detalhes sits next to status on small screens; on sm+ it will be on the right due to parent layout -->
                             <div class="ml-2 sm:ml-0">
-                                <button pButton type="button" icon="pi pi-eye" label="Detalhes" class="p-button-text" (click)="viewDetails(p)"></button>
+                                <button pButton type="button" icon="pi pi-eye" class="p-button-text flex-none whitespace-nowrap" (click)="viewDetails(p)">Detalhes</button>
                             </div>
                         </div>
 
                         <!-- Aprovar occupies a separate row on small screens, but on sm+ it will appear inline on the right via parent flex -->
                         <div class="w-full sm:w-auto">
-                            <div class="flex justify-start sm:justify-end">
-                                <button pButton type="button" icon="pi pi-check" label="Aprovar" class="p-button-success p-button-text" (click)="openApprove(p)"></button>
+                                <div class="flex justify-start sm:justify-end">
+                                <button pButton type="button" icon="pi pi-check" class="p-button-success p-button-text flex-none whitespace-nowrap" (click)="openApprove(p)">Aprovar</button>
                             </div>
                         </div>
                     </div>

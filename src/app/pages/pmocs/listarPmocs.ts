@@ -104,8 +104,8 @@ const CHECKLIST_LABELS: Record<string, string> = {
 
                 <ng-template pTemplate="footer">
                     <div class="flex justify-end gap-2">
-                        <button pButton type="button" label="Salvar" class="p-button-sm p-button-primary" (click)="saveEquipmentEdit(modalPmoc!, modalIndex!, $event)"></button>
-                        <button pButton type="button" label="Cancelar" class="p-button-sm p-button-text" (click)="equipmentModalVisible = false"></button>
+                        <button pButton type="button" class="p-button-sm p-button-primary flex-none whitespace-nowrap" (click)="saveEquipmentEdit(modalPmoc!, modalIndex!, $event)">Salvar</button>
+                        <button pButton type="button" class="p-button-sm p-button-text flex-none whitespace-nowrap" (click)="equipmentModalVisible = false">Cancelar</button>
                     </div>
                 </ng-template>
             </p-dialog>
@@ -166,7 +166,7 @@ const CHECKLIST_LABELS: Record<string, string> = {
                                 <!-- Summary / toggle line -->
                                 <div class="text-sm text-muted">
                                     Equipamentos: <strong>{{ p.equipments?.length || (p.equipamento ? 1 : 0) }}</strong>
-                                    <a class="p-button-text p-button-sm ml-2" (click)="toggleExpand(p, $event)" role="button" [attr.aria-expanded]="expandedPmocId === p.id" style="cursor:pointer">{{
+                                    <a class="p-button-text p-button-sm ml-2 u-cursor-pointer" (click)="toggleExpand(p, $event)" role="button" [attr.aria-expanded]="expandedPmocId === p.id">{{
                                         expandedPmocId === p.id ? 'Ocultar equipamentos' : 'Ver equipamentos'
                                     }}</a>
                                 </div>
@@ -215,8 +215,8 @@ const CHECKLIST_LABELS: Record<string, string> = {
                                                         </div>
                                                     </div>
                                                     <div class="mt-4">
-                                                        <button pButton type="button" class="p-button-sm p-button-outlined mr-2" (click)="startEditEquipment(p, i, $event)">Editar</button>
-                                                        <button pButton type="button" class="p-button-sm p-button-outlined" (click)="registerAttendance(p.id, eq.id)">Registrar atendimento</button>
+                                                        <button pButton type="button" class="p-button-sm p-button-outlined mr-2 flex-none whitespace-nowrap" (click)="startEditEquipment(p, i, $event)">Editar</button>
+                                                                            <button pButton type="button" class="p-button-sm p-button-outlined flex-none whitespace-nowrap" (click)="registerAttendance(p.id, eq.id)">Registrar atendimento</button>
                                                     </div>
                                                 </div>
 
@@ -229,7 +229,7 @@ const CHECKLIST_LABELS: Record<string, string> = {
                                                     <div class="font-semibold">{{ p.equipamento || '-' }}</div>
                                                 </div>
                                                 <div class="equip-compact-actions">
-                                                    <button pButton type="button" class="p-button-sm p-button-outlined" (click)="registerAttendance(p.id, p.equipamento)">Registrar atendimento</button>
+                                                        <button pButton type="button" class="p-button-sm p-button-outlined flex-none whitespace-nowrap" (click)="registerAttendance(p.id, p.equipamento)">Registrar atendimento</button>
                                                 </div>
                                             </div>
                                         </ng-template>
@@ -240,7 +240,7 @@ const CHECKLIST_LABELS: Record<string, string> = {
                             <!-- Responsive footer: status badge + actions -->
                             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pmoc-footer">
                                 <div class="flex gap-2">
-                                    <button pButton type="button" label="Excluir" icon="pi pi-trash" iconPos="left" class="p-button-text p-button-danger p-button-sm" (click)="deletePmoc(p.id)"></button>
+                                    <button pButton type="button" icon="pi pi-trash" iconPos="left" class="p-button-text p-button-danger p-button-sm flex-none whitespace-nowrap" (click)="deletePmoc(p.id)">Excluir</button>
                                 </div>
                             </div>
 
@@ -923,10 +923,27 @@ export class ListarPmocs {
     }
 
     registerAttendance(pmocId: string, equipamentoId?: string) {
-        // Navigate to registrar-atendimento route with query params so the form can prefill if implemented
-        const params: any = { pmocId };
-        if (equipamentoId) params.equipamentoId = equipamentoId;
-        this.router.navigate(['/pages/pmocs/registrar-atendimento'], { queryParams: params }).catch((err) => console.error('Navigation to registrar-atendimento failed', err));
+        // Prefer param-based route: /pages/:id_cliente/pmocs/:id_pmoc/equipamentos/:id_equipamento/registrar-atendimento
+    const pmoc = this.allPmocs.find((p) => p.id === pmocId) || null;
+    // prefer clientId (UUID) in routes; fall back to encoded client name only if clientId is missing
+    const clientParam = (pmoc && pmoc.clientId) ? encodeURIComponent(pmoc.clientId) : (pmoc && pmoc.cliente ? encodeURIComponent(pmoc.cliente) : 'unknown-client');
+
+        try {
+            if (equipamentoId) {
+                this.router
+                    .navigate([`/pages/cliente/${clientParam}/pmocs/${pmocId}/equipamentos/${encodeURIComponent(equipamentoId)}/registrar-atendimento`])
+                    .catch((err) => console.error('Navigation to registrar-atendimento failed', err));
+            } else {
+                this.router
+                    .navigate([`/pages/cliente/${clientParam}/pmocs/${pmocId}/registrar-atendimento`])
+                    .catch((err) => console.error('Navigation to registrar-atendimento failed', err));
+            }
+        } catch (err) {
+            // fallback to previous query param behavior
+            const params: any = { pmocId };
+            if (equipamentoId) params.equipamentoId = equipamentoId;
+            this.router.navigate(['/pages/pmocs/registrar-atendimento'], { queryParams: params }).catch((e) => console.error('Navigation fallback failed', e));
+        }
     }
 
     getAssinaturaLabel(value?: string) {
@@ -1170,8 +1187,8 @@ export class ListarPmocs {
             .map(
                 (k) => `
             <tr>
-                <td style="padding:6px 12px;border:1px solid #e5e7eb;">${this.getChecklistLabel(k)}</td>
-                <td style="padding:6px 12px;border:1px solid #e5e7eb;">${p.checklist && p.checklist[k] ? 'OK' : 'NÃO'}</td>
+                <td class="table-cell-pad">${this.getChecklistLabel(k)}</td>
+                <td class="table-cell-pad">${p.checklist && p.checklist[k] ? 'OK' : 'NÃO'}</td>
             </tr>
         `
             )
@@ -1209,8 +1226,8 @@ export class ListarPmocs {
                 .map(
                     (k) => `
             <tr>
-                <td style="padding:6px 12px;border:1px solid #e5e7eb;">${this.getChecklistLabel(k)}</td>
-                <td style="padding:6px 12px;border:1px solid #e5e7eb;">${p.checklist && p.checklist[k] ? 'OK' : 'NÃO'}</td>
+                <td class="table-cell-pad">${this.getChecklistLabel(k)}</td>
+                <td class="table-cell-pad">${p.checklist && p.checklist[k] ? 'OK' : 'NÃO'}</td>
             </tr>
         `
                 )
@@ -1227,22 +1244,35 @@ export class ListarPmocs {
                     table { border-collapse:collapse; width:100%; margin-top:8px }
                     th { text-align:left; padding:8px; background:#f3f4f6 }
                     td { padding:8px; border-top:1px solid #e5e7eb }
+                    /* helper classes mirrored from global styles to keep generated HTML self-contained */
+                    .header-title { margin: 0 }
+                    .text-muted-accent { color: #6b7280 }
+                    .text-right { text-align: right }
+                    .font-600 { font-weight: 600 }
+                    .export-card { width: 100%; max-width: 793px }
+                    .t-full { width: 100% }
+                    .spacer-12 { height: 12px }
+                    .spacer-24 { height: 24px }
+                    .section-title { margin: 0 0 8px 0 }
+                    .pre-wrap { white-space: pre-wrap; color: #111827 }
+                    .table-cell-pad { padding:6px 12px; border:1px solid #e5e7eb }
+                    .mt-18 { margin-top: 18px }
                 </style>
             </head>
             <body>
                 <div class="header">
                     <div>
-                        <h1 style="margin:0">PMOC — ${p.id}</h1>
-                        <div style="color:#6b7280">Cliente: ${p.cliente}</div>
+                        <h1 class="header-title">PMOC — ${p.id}</h1>
+                        <div class="text-muted-accent">Cliente: ${p.cliente}</div>
                     </div>
-                    <div style="text-align:right">
-                        <div style="font-weight:600">Responsável Técnico: ${p.responsavel}</div>
-                        <div style="color:#6b7280">${new Intl.DateTimeFormat('pt-BR').format(this.parseDateFromIso(p.dataManutencao))}</div>
+                    <div class="text-right">
+                        <div class="font-600">Responsável Técnico: ${p.responsavel}</div>
+                        <div class="text-muted-accent">${new Intl.DateTimeFormat('pt-BR').format(this.parseDateFromIso(p.dataManutencao))}</div>
                     </div>
                 </div>
 
-                <div class="card" style="width:100%; max-width:793px;">
-                    <table style="width:100%;">
+                <div class="card export-card">
+                    <table class="t-full">
                         <tr><th>Campo</th><th>Valor</th></tr>
                         <tr><td>Equipamento</td><td>${p.equipamento}</td></tr>
                         <tr><td>Tipo</td><td>${p.tipoManutencao}</td></tr>
@@ -1253,26 +1283,26 @@ export class ListarPmocs {
                     </table>
                 </div>
 
-                <div style="height:12px"></div>
+                <div class="spacer-12"></div>
 
                 <div class="card">
-                    <h3 style="margin:0 0 8px 0">Observações</h3>
-                    <div style="white-space:pre-wrap; color:#111827">${p.observacoes || '-'}</div>
+                    <h3 class="section-title">Observações</h3>
+                    <div class="pre-wrap">${p.observacoes || '-'}</div>
                 </div>
 
-                <div style="height:12px"></div>
+                <div class="spacer-12"></div>
 
                 <div class="card">
-                    <h3 style="margin:0 0 8px 0">Checklist</h3>
+                    <h3 class="section-title">Checklist</h3>
                     <table>
                         <tr><th>Item</th><th>Resultado</th></tr>
                         ${checklist}
                     </table>
                 </div>
 
-                <div style="height:24px"></div>
+                <div class="spacer-24"></div>
 
-                <div style="text-align:right; color:#6b7280; margin-top:18px">Gerado por Prototipo-Portal</div>
+                <div class="text-right text-muted-accent mt-18">Gerado por Prototipo-Portal</div>
             </body>
             </html>
         `;
@@ -1285,46 +1315,46 @@ export class ListarPmocs {
             .map(
                 (k) => `
             <tr>
-                <td style="padding:6px 12px;border:1px solid #e5e7eb;">${this.getChecklistLabel(k)}</td>
-                <td style="padding:6px 12px;border:1px solid #e5e7eb;">${p.checklist && p.checklist[k] ? 'OK' : 'NÃO'}</td>
+                <td class="table-cell-pad">${this.getChecklistLabel(k)}</td>
+                <td class="table-cell-pad">${p.checklist && p.checklist[k] ? 'OK' : 'NÃO'}</td>
             </tr>
         `
             )
             .join('');
 
         const html = `
-            <div style="font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; color:#111827; padding:24px; background:#fff; max-width:842px">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px">
+            <div class="export-card" style="font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; color:#111827; padding:24px; background:#fff; max-width:842px">
+                <div class="header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px">
                     <div>
-                        <h1 style="margin:0">PMOC — ${p.id}</h1>
-                        <div style="color:#6b7280">Cliente: ${p.cliente}</div>
+                        <h1 class="header-title">PMOC — ${p.id}</h1>
+                        <div class="text-muted-accent">Cliente: ${p.cliente}</div>
                     </div>
-                    <div style="text-align:right">
-                        <div style="font-weight:600">Responsável Técnico: ${p.responsavel}</div>
-                        <div style="color:#6b7280">${new Intl.DateTimeFormat('pt-BR').format(this.parseDateFromIso(p.dataManutencao))}</div>
+                    <div class="text-right">
+                        <div class="font-600">Responsável Técnico: ${p.responsavel}</div>
+                        <div class="text-muted-accent">${new Intl.DateTimeFormat('pt-BR').format(this.parseDateFromIso(p.dataManutencao))}</div>
                     </div>
                 </div>
 
-                <div style="border:1px solid #e5e7eb; border-radius:8px; padding:12px; margin-bottom:12px">
+                <div class="card" style="margin-bottom:12px">
                     <table style="border-collapse:collapse; width:100%">
-                        <tr><th style="text-align:left; padding:8px; background:#f3f4f6">Campo</th><th style="text-align:left; padding:8px; background:#f3f4f6">Valor</th></tr>
-                        <tr><td style="padding:8px;border-top:1px solid #e5e7eb">Equipamento</td><td style="padding:8px;border-top:1px solid #e5e7eb">${p.equipamento}</td></tr>
-                        <tr><td style="padding:8px;border-top:1px solid #e5e7eb">Tipo</td><td style="padding:8px;border-top:1px solid #e5e7eb">${p.tipoManutencao}</td></tr>
-                        <tr><td style="padding:8px;border-top:1px solid #e5e7eb">Status</td><td style="padding:8px;border-top:1px solid #e5e7eb">${p.statusEquipamento}</td></tr>
-                        <tr><td style="padding:8px;border-top:1px solid #e5e7eb">Periodicidade</td><td style="padding:8px;border-top:1px solid #e5e7eb">${p.periodicidade}</td></tr>
-                        <tr><td style="padding:8px;border-top:1px solid #e5e7eb">Próxima Manutenção</td><td style="padding:8px;border-top:1px solid #e5e7eb">${p.proximaManutencao ? new Intl.DateTimeFormat('pt-BR').format(this.parseDateFromIso(p.proximaManutencao)) : '-'}</td></tr>
-                        <tr><td style="padding:8px;border-top:1px solid #e5e7eb">Custos</td><td style="padding:8px;border-top:1px solid #e5e7eb">${p.custos || '-'}</td></tr>
-                        <tr><td style="padding:8px;border-top:1px solid #e5e7eb">Assinatura</td><td style="padding:8px;border-top:1px solid #e5e7eb">${this.getAssinaturaLabel(p.assinatura)}</td></tr>
+                        <tr><th class="table-th">Campo</th><th class="table-th">Valor</th></tr>
+                        <tr><td class="table-td">Equipamento</td><td class="table-td">${p.equipamento}</td></tr>
+                        <tr><td class="table-td">Tipo</td><td class="table-td">${p.tipoManutencao}</td></tr>
+                        <tr><td class="table-td">Status</td><td class="table-td">${p.statusEquipamento}</td></tr>
+                        <tr><td class="table-td">Periodicidade</td><td class="table-td">${p.periodicidade}</td></tr>
+                        <tr><td class="table-td">Próxima Manutenção</td><td class="table-td">${p.proximaManutencao ? new Intl.DateTimeFormat('pt-BR').format(this.parseDateFromIso(p.proximaManutencao)) : '-'}</td></tr>
+                        <tr><td class="table-td">Custos</td><td class="table-td">${p.custos || '-'}</td></tr>
+                        <tr><td class="table-td">Assinatura</td><td class="table-td">${this.getAssinaturaLabel(p.assinatura)}</td></tr>
                     </table>
                 </div>
 
-                <div style="border:1px solid #e5e7eb; border-radius:8px; padding:12px; margin-bottom:12px">
-                    <h3 style="margin:0 0 8px 0">Observações</h3>
-                    <div style="white-space:pre-wrap; color:#111827">${p.observacoes || '-'}</div>
+                <div class="card" style="margin-bottom:12px">
+                    <h3 class="section-title">Observações</h3>
+                    <div class="pre-wrap">${p.observacoes || '-'}</div>
                 </div>
 
-                <div style="border:1px solid #e5e7eb; border-radius:8px; padding:12px">
-                    <h3 style="margin:0 0 8px 0">Checklist</h3>
+                <div class="card">
+                    <h3 class="section-title">Checklist</h3>
                     <table style="border-collapse:collapse; width:100%">
                         <tr><th style="text-align:left; padding:8px; background:#f3f4f6">Item</th><th style="text-align:left; padding:8px; background:#f3f4f6">Resultado</th></tr>
                         ${checklistHtml}

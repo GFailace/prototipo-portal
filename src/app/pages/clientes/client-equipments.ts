@@ -197,8 +197,8 @@ import { PmocScheduleService, Equipment } from '../pmocs/pmoc-schedule.service';
                     align-self: flex-end;
                     margin-top: 0.25rem;
                 }
-                /* hide button labels on very small screens to match other search bars */
-                .p-button .p-button-label { display: none; }
+                /* hide only the clear-button label on very small screens to keep toolbar compact */
+                .search-bar .clear-button .p-button-label { display: none; }
             }
         `
     ]

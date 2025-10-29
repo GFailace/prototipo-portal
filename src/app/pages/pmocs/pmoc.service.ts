@@ -25,6 +25,8 @@ export interface Equipment {
 
 export interface Pmoc {
     id: string;
+    // unique client identifier (UUID/hash) to be used in routes instead of the human-readable name
+    clientId?: string;
     cliente: string;
     // legacy single-equipment field kept for backward compatibility
     equipamento?: string;
@@ -54,6 +56,7 @@ export class PmocService {
     private pmocsSubject = new BehaviorSubject<Pmoc[]>([
         {
             id: 'PMOC-001',
+            clientId: 'b3a1f4c2-8d2e-4f1a-9b07-1a2c3d4e5f60',
             cliente: 'BHIO SUPPLY | ESTEIO - RS',
             createdAt: '2024-10-10',
             validade: '2026-10-10',
@@ -85,6 +88,7 @@ export class PmocService {
         },
         {
             id: 'PMOC-002',
+            clientId: 'd8e7a6b4-2c3f-4a5b-9987-0f1e2d3c4b50',
             cliente: 'BHIO SUPPLY FILIAL | ESTEIO - RS',
             createdAt: '2024-09-02',
             validade: '2025-09-02',
@@ -117,6 +121,7 @@ export class PmocService {
         },
         {
             id: 'PMOC-003',
+            clientId: 'e7f6d5c4-b3a2-4e1f-8d09-2b3c4d5e6f70',
             cliente: 'BHIO SUPPLY | CAMPO BOM - RS',
             createdAt: '2024-08-15',
             validade: '2025-08-15',
@@ -149,6 +154,7 @@ export class PmocService {
         },
         {
             id: 'PMOC-004',
+            clientId: 'f1e2d3c4-b5a6-4789-9012-3a4b5c6d7e80',
             cliente: 'BHIO SUPPLY | MATRIZ - RS',
             createdAt: '2025-10-01',
             validade: '2026-10-01',

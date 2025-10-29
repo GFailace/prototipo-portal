@@ -90,6 +90,6 @@
   .select-wrap { width: 100%; }
   .select-wrap select { width: 100%; }
   .clear-button { align-self: flex-end; margin-top: 0.25rem; }
-  /* hide long button labels to keep toolbar compact on small screens */
-  .p-button .p-button-label { display: none; }
+  /* hide long button labels to keep toolbar compact on small screens, but only for the clear icon button */
+  .search-bar .clear-button .p-button-label { display: none; }
 }

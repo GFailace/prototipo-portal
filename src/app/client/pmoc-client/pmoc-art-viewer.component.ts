@@ -29,8 +29,8 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
                     </div>
 
                     <div class="pmoc-footer flex items-center justify-start gap-2">
-                        <button pButton type="button" label="Baixar" icon="pi pi-download" class="p-button-sm" (click)="downloadArt()" [disabled]="loading"></button>
-                        <button pButton type="button" label="Abrir" icon="pi pi-external-link" class="p-button-sm p-button-text ml-2" (click)="openInNewTab()" [disabled]="loading"></button>
+                        <button pButton type="button" icon="pi pi-download" class="p-button-sm flex-none whitespace-nowrap" (click)="downloadArt()" [disabled]="loading">Baixar</button>
+                        <button pButton type="button" icon="pi pi-external-link" class="p-button-sm p-button-text ml-2 flex-none whitespace-nowrap" (click)="openInNewTab()" [disabled]="loading">Abrir</button>
                         <div *ngIf="loading" class="ml-3"><p-progressSpinner styleClass="p-small"></p-progressSpinner></div>
                     </div>
                 </div>

@@ -214,10 +214,13 @@ const CHECKLIST_LABELS: Record<string, string> = {
                                                             Último atendimento: <strong>{{ eq.atendimentos[eq.atendimentos.length - 1].dataAtendimento | date: 'dd/MM/yyyy' }}</strong>
                                                         </div>
                                                     </div>
-                                                    <div class="mt-4">
-                                                        <button pButton type="button" class="p-button-sm p-button-outlined mr-2 flex-none whitespace-nowrap" (click)="startEditEquipment(p, i, $event)">Editar</button>
-                                                                            <button pButton type="button" class="p-button-sm p-button-outlined flex-none whitespace-nowrap" (click)="registerAttendance(p.id, eq.id)">Registrar atendimento</button>
-                                                    </div>
+                                                        <div class="mt-4">
+                                                            <button pButton type="button" class="p-button-sm p-button-outlined mr-2 flex-none whitespace-nowrap" (click)="startEditEquipment(p, i, $event)">Editar equipamento</button>
+                                                            <button pButton type="button" class="p-button-sm p-button-outlined flex-none whitespace-nowrap" (click)="registerAttendance(p.id, eq.id)">Registrar atendimento</button>
+                                                            <button pButton type="button" class="p-button-sm p-button-text p-button-danger ml-2" (click)="confirmDeleteEquipment(p, i, $event)" aria-label="Excluir equipamento">
+                                                                <i class="pi pi-trash"></i> Excluir equipamento
+                                                            </button>
+                                                        </div>
                                                 </div>
 
                                                 <!-- edit mode is handled in a modal dialog now -->
@@ -229,7 +232,8 @@ const CHECKLIST_LABELS: Record<string, string> = {
                                                     <div class="font-semibold">{{ p.equipamento || '-' }}</div>
                                                 </div>
                                                 <div class="equip-compact-actions">
-                                                        <button pButton type="button" class="p-button-sm p-button-outlined flex-none whitespace-nowrap" (click)="registerAttendance(p.id, p.equipamento)">Registrar atendimento</button>
+                                                    <button pButton type="button" class="p-button-sm p-button-primary mr-2" (click)="startAddEquipment(p, $event)">Adicionar equipamento</button>
+                                                    <button *ngIf="p.equipamento" pButton type="button" class="p-button-sm p-button-outlined flex-none whitespace-nowrap" (click)="registerAttendance(p.id, p.equipamento)">Registrar atendimento</button>
                                                 </div>
                                             </div>
                                         </ng-template>
@@ -239,9 +243,10 @@ const CHECKLIST_LABELS: Record<string, string> = {
 
                             <!-- Responsive footer: status badge + actions -->
                             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pmoc-footer">
-                                <div class="flex gap-2">
-                                    <button pButton type="button" icon="pi pi-trash" iconPos="left" class="p-button-text p-button-danger p-button-sm flex-none whitespace-nowrap" (click)="deletePmoc(p.id)">Excluir</button>
-                                </div>
+                                                        <div class="flex gap-2">
+                                                            <button pButton type="button" icon="pi pi-pencil" iconPos="left" class="p-button-text p-button-sm flex-none whitespace-nowrap" (click)="goEdit(p.id, $event)">Editar</button>
+                                                            <button pButton type="button" icon="pi pi-trash" iconPos="left" class="p-button-text p-button-danger p-button-sm flex-none whitespace-nowrap" (click)="deletePmoc(p.id)">Excluir</button>
+                                                        </div>
                             </div>
 
                             <!-- Details panel removed: equipment accordion above replaces the previous detailed expand panel. Keep other actions available on the card footer. -->
@@ -273,6 +278,17 @@ const CHECKLIST_LABELS: Record<string, string> = {
             .page-wrap {
                 max-width: 980px;
                 margin: 0 auto;
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+
+            /* On large screens expand the content area to use available space (leave room for sidebar) */
+            @media (min-width: 1200px) {
+                .page-wrap {
+                    /* subtract typical sidebar width (260px) and gutter */
+                    max-width: calc(100% - 60px);
+                    margin: 0 24px;
+                }
             }
 
             p-header {
@@ -511,6 +527,8 @@ export class ListarPmocs {
     visiblePmocs: Pmoc[] = [];
     searchTerm: string = '';
     selectedStatus: string | null = null;
+    // Track expanded equipment items per PMOC (allows multiple expanded items)
+    expandedEquipment: Record<string, Set<number>> = {};
     // reusing existing statusOptions defined further down in the file
 
     // Options copied from criarPmoc
@@ -657,8 +675,8 @@ export class ListarPmocs {
     // create a FormGroup for editing/creating an equipment (mirrors criarPmoc.createEquipmentGroup)
     private createEquipmentGroup(initial?: any) {
         return this.fb.group({
-            // id should not be editable by the user - keep the control disabled
-            id: [{ value: initial?.id || '', disabled: true }],
+            // id: keep editable for new equipment (no initial id). If editing an existing equipment (initial.id present) keep it disabled.
+            id: [{ value: initial?.id || '', disabled: !!initial?.id }],
             identificacao: [initial?.identificacao || '', Validators.required],
             ocupantes: [initial?.ocupantes || null],
             ocupantesTipo: [initial?.ocupantesTipo || 'fixos'],
@@ -712,6 +730,64 @@ export class ListarPmocs {
                 tipoGas: eq.tipoGas || null
             });
         }
+
+        this.modalEquipmentForm = fg;
+        this.modalPmoc = pmoc;
+        this.modalIndex = index;
+        this.equipmentModalVisible = true;
+        // make sure the PMOC panel is expanded and this new equipment item is shown
+        try {
+            this.expandedPmocId = pmoc.id;
+            if (!this.expandedEquipment[pmoc.id]) this.expandedEquipment[pmoc.id] = new Set<number>();
+            this.expandedEquipment[pmoc.id].add(index);
+        } catch (e) {
+            // defensive: ignore if expandedEquipment map isn't ready yet
+        }
+    }
+
+    isEquipmentExpanded(pmocId: string | undefined | null, index: number): boolean {
+        if (!pmocId) return false;
+        const s = this.expandedEquipment[pmocId];
+        return !!(s && s.has(index));
+    }
+
+    toggleEquipmentExpand(pmocId: string | undefined | null, index: number, evt?: Event) {
+        if (evt && typeof (evt as any).stopPropagation === 'function') (evt as any).stopPropagation();
+        if (!pmocId) return;
+        if (!this.expandedEquipment[pmocId]) this.expandedEquipment[pmocId] = new Set<number>();
+        const s = this.expandedEquipment[pmocId];
+        if (s.has(index)) s.delete(index);
+        else s.add(index);
+    }
+
+    /**
+     * Open the same equipment modal to add a new equipment to the provided PMOC.
+     */
+    startAddEquipment(pmoc: Pmoc, evt?: Event) {
+        if (evt && typeof evt.stopPropagation === 'function') evt.stopPropagation();
+        if (!pmoc || !pmoc.id) return;
+
+        // ensure the per-pmoc edit forms array exists
+        this.ensureEquipmentEditForms(pmoc);
+
+        // new equipment will be appended at the end of the equipments array
+        const index = pmoc.equipments && Array.isArray(pmoc.equipments) ? pmoc.equipments.length : 0;
+
+        // get (or create) the FormGroup for this new equipment
+        const fg = this.getEquipmentEditForm(pmoc.id, index);
+
+        // ensure default/empty values (id remains disabled input)
+        fg.patchValue({
+            id: '',
+            identificacao: '',
+            ocupantes: null,
+            ocupantesTipo: 'fixos',
+            areaClimatizada: null,
+            equipamentoTipo: '',
+            capacidadeBtus: null,
+            tecnologia: null,
+            tipoGas: null
+        });
 
         this.modalEquipmentForm = fg;
         this.modalPmoc = pmoc;
@@ -964,6 +1040,54 @@ export class ListarPmocs {
                 this.msg.add({ severity: 'success', summary: 'Excluído', detail: 'PMOC excluído com sucesso.' });
             }
         });
+    }
+
+    /**
+     * Ask for confirmation and delete a single equipment from a PMOC.
+     * Uses index-based removal to keep behaviour simple with the in-memory service.
+     */
+    confirmDeleteEquipment(pmoc: Pmoc, index: number, evt?: Event) {
+        if (evt && typeof evt.stopPropagation === 'function') evt.stopPropagation();
+        if (!pmoc || typeof index !== 'number') return;
+        this.confirm.confirm({
+            message: 'Confirma exclusão deste equipamento?',
+            header: 'Confirmação',
+            icon: 'pi pi-exclamation-triangle',
+            accept: () => {
+                this.deleteEquipment(pmoc.id, index);
+            }
+        });
+    }
+
+    deleteEquipment(pmocId: string, index: number) {
+        const pmoc = this.allPmocs.find((p) => p.id === pmocId);
+        if (!pmoc) {
+            this.msg.add({ severity: 'warn', summary: 'Não encontrado', detail: 'PMOC não encontrado.' });
+            return;
+        }
+
+        const equipments = pmoc.equipments && Array.isArray(pmoc.equipments) ? pmoc.equipments.slice() : [];
+        if (index < 0 || index >= equipments.length) {
+            this.msg.add({ severity: 'warn', summary: 'Inválido', detail: 'Equipamento não encontrado.' });
+            return;
+        }
+
+        // remove the equipment and persist via service
+        equipments.splice(index, 1);
+        this.pmocService.update(pmocId, { equipments });
+
+        // update local copies and UI
+        const idx = this.allPmocs.findIndex((p) => p.id === pmocId);
+        if (idx !== -1) {
+            this.allPmocs[idx] = { ...this.allPmocs[idx], equipments } as any;
+            this.applyFilters();
+        }
+
+        if (this.selectedPmoc && this.selectedPmoc.id === pmocId) {
+            this.selectedPmoc = { ...this.selectedPmoc, equipments } as any;
+        }
+
+        this.msg.add({ severity: 'success', summary: 'Excluído', detail: 'Equipamento excluído.' });
     }
 
     goCreate() {

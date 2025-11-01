@@ -40,10 +40,10 @@ export class ClientMenu {
     constructor(private router: Router) {}
 
     ngOnInit() {
-        // try to extract clientId from current URL (pattern /client/:clientId/...)
-        const match = this.router.url.match(/^\/client\/([^\/]+)/);
-        const clientId = match ? match[1] : null;
-        const baseLink = clientId ? ['/client', clientId] : ['/client'];
+    // try to extract cliente id from current URL (pattern /cliente/:cliente_id/...)
+    const match = this.router.url.match(/^\/cliente\/([^\/]+)/);
+    const clientId = match ? match[1] : null;
+    const baseLink = clientId ? ['/cliente', clientId] : ['/cliente'];
 
         this.model = [
             {

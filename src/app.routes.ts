@@ -19,15 +19,15 @@ export const appRoutes: Routes = [
     },
     { path: 'landing', component: Landing },
     {
-        // Accept a client identifier (UUID/hash) in the path so routes load per-client
-        path: 'client/:clientId',
+        // Accept a cliente identifier (UUID/hash) in the path so routes load per-cliente
+            path: 'cliente/:cliente_id',
         component: ClientLayout,
         canActivate: [ClientAuthGuard],
         children: [
             { path: 'atendimentos', loadComponent: () => import('./app/client/pmoc-client/pmoc-client.component').then((m) => m.PmocClientComponent) },
             { path: 'art', loadComponent: () => import('./app/client/pmoc-client/pmoc-art-viewer.component').then((m) => m.PmocArtViewerComponent) },
             { path: 'equipamentos', loadComponent: () => import('./app/pages/clientes/client-equipments').then((m) => m.ClientEquipmentsComponent) },
-            { path: 'equipamentos/:id/schedule', loadComponent: () => import('./app/pages/clientes/equipamento-schedule.component').then((m) => m.EquipamentoScheduleComponent) },
+            { path: 'equipamentos/:id/pmoc', loadComponent: () => import('./app/pages/clientes/equipamento-schedule.component').then((m) => m.EquipamentoScheduleComponent) },
             { path: '', redirectTo: 'pmocs', pathMatch: 'full' }
         ]
     },

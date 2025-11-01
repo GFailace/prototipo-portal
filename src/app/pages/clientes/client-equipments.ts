@@ -47,7 +47,7 @@ import { PmocScheduleService, Equipment } from '../pmocs/pmoc-schedule.service';
                                 <div class="equip-status">Status do equipamento</div>
                                 <div class="equip-status-value">{{ e.statusEquipamento === 'fora_de_operacao' ? 'Fora de operação' : 'Em operação' }}</div>
                                 <div class="equip-actions">
-                                    <a [routerLink]="[e.id, 'schedule']" pButton type="button" label="Ver PMOC" class="p-button-sm p-button-text"></a>
+                                    <a [routerLink]="[e.id, 'pmoc']" pButton type="button" label="Ver PMOC" class="p-button-sm p-button-text"></a>
                                 </div>
                             </div>
                         </div>
@@ -61,6 +61,17 @@ import { PmocScheduleService, Equipment } from '../pmocs/pmoc-schedule.service';
             .equipments-wrap {
                 max-width: 980px;
                 margin: 0 auto;
+                padding: 0 1rem;
+            }
+
+            /* On large screens expand the content area to use available space (leave room for sidebar) */
+            @media (min-width: 1200px) {
+                .equipments-wrap {
+                    max-width: calc(100% - 60px);
+                    margin: 0 24px;
+                    padding-left: 24px;
+                    padding-right: 24px;
+                }
             }
             p-header {
                 display: block;

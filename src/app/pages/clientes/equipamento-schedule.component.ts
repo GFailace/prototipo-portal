@@ -58,10 +58,10 @@ type Cell = { status: string; date?: string; attendanceId?: string };
                 <ng-container *ngIf="!isMobile">
                     <ng-container *ngFor="let group of groupedChecklist">
                         <div style="margin: 8px 0; font-weight:700; color:var(--text-color-secondary)">SERVIÇOS DE MANUTENÇÃO - UNIDADE {{ group.unit }}</div>
-                        <p-table [value]="group.items" [responsiveLayout]="'stack'" [scrollable]="true" [style]="{ minWidth: '720px', marginBottom: '12px' }">
-                            <ng-template pTemplate="header">
+                        <p-table [value]="group.items" [responsiveLayout]="'stack'" [scrollable]="true" [style]="{ minWidth: '640px', marginBottom: '12px' }">
+                                <ng-template pTemplate="header">
                                 <tr>
-                                    <th style="min-width:120px;">Item</th>
+                                    <th class="item-cell">Item</th>
                                     <th style="min-width:120px;">Período</th>
                                     <th style="min-width:240px;">Descrição de Procedimentos</th>
                                     <th *ngFor="let m of months" class="month-cell" style="min-width:110px; text-align:center">{{ getMonthLabelWithYear(m) }}</th>
@@ -70,7 +70,7 @@ type Cell = { status: string; date?: string; attendanceId?: string };
 
                             <ng-template pTemplate="body" let-row let-rowIndex="rowIndex">
                                 <tr>
-                                    <td>{{ row.itemNumber || (row.controlName) }}</td>
+                                    <td class="item-cell">{{ row.itemNumber || (row.controlName) }}</td>
                                     <td>
                                         <div class="period-chip">{{ formatPeriod(row.periodicity) }}</div>
                                     </td>
@@ -213,6 +213,39 @@ type Cell = { status: string; date?: string; attendanceId?: string };
                 font-weight: 600;
             }
 
+            /* compact item column: shrink to content so 'Item' occupies minimal width */
+            .item-cell {
+                /* width:1% forces the column to shrink to its content in table-layout:auto contexts */
+                width: 1%;
+                white-space: nowrap; /* keep the item number/control name on one line */
+                text-align: center;
+                padding-right: 8px;
+                font-weight: 600;
+            }
+
+            /* medium screens (tablet / small laptop): make the item column slightly wider and reduce month cell widths */
+            @media (min-width: 768px) and (max-width: 1024px) {
+                .item-cell {
+                    width: auto;
+                    min-width: 48px; /* enough for 2-3 digit numbers */
+                    text-align: right;
+                    padding-right: 12px;
+                    font-weight: 700;
+                }
+                .month-cell {
+                    min-width: 88px !important; /* reduce month cell width so table fits better */
+                }
+                .period-chip {
+                    min-width: 56px;
+                    padding: 4px 8px;
+                    font-size: 0.78rem;
+                }
+                :host ::ng-deep .p-table {
+                    /* allow the table to be narrower on medium screens */
+                    min-width: 0 !important;
+                }
+            }
+
             /* smaller pills for month cells */
             .status-pill {
                 padding: 0.22rem 0.5rem;
@@ -220,7 +253,7 @@ type Cell = { status: string; date?: string; attendanceId?: string };
             }
 
             /* mobile: stacked cards look using PrimeNG stack responsive layout; improve spacing */
-            @media (max-width: 767px) {
+            @media (max-width: 1024px) {
                 :host ::ng-deep .p-datatable-responsive-stack .p-datatable-tbody > tr > td {
                     padding: 10px 12px;
                 }
@@ -328,7 +361,7 @@ type Cell = { status: string; date?: string; attendanceId?: string };
                 font-weight: 600;
             }
 
-            @media (max-width: 767px) {
+            @media (max-width: 1024px) {
                 .equip-header {
                     flex-direction: column;
                     gap: 12px;
@@ -410,7 +443,7 @@ type Cell = { status: string; date?: string; attendanceId?: string };
                 border-radius: 6px;
             }
 
-            @media (max-width: 767px) {
+            @media (max-width: 1024px) {
                 .label-cell {
                     min-width: 120px;
                     font-size: 0.9rem;
@@ -452,8 +485,9 @@ export class EquipamentoScheduleComponent implements OnInit {
     ngOnInit(): void {
         // detect small screens to switch to mobile card layout
         try {
-            this.isMobile = window.matchMedia('(max-width: 767px)').matches;
-            this.mq = window.matchMedia('(max-width: 767px)');
+            // treat widths up to 1024px as mobile/card layout so intermediate screens follow mobile
+            this.isMobile = window.matchMedia('(max-width: 1024px)').matches;
+            this.mq = window.matchMedia('(max-width: 1024px)');
             this.mq.addEventListener('change', this.mqListener);
         } catch (e) {
             // matchMedia may not be available in some test environments; default to false

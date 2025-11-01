@@ -107,6 +107,16 @@ import { RippleModule } from 'primeng/ripple';
                 margin: 0 auto;
                 padding: 1rem;
             }
+
+            /* On large screens expand the form area to use available space (leave room for sidebar) */
+            @media (min-width: 1200px) {
+                .form-wrapper {
+                    max-width: calc(100% - 0px);
+                    margin: 0 24px;
+                    padding-left: 24px;
+                    padding-right: 24px;
+                }
+            }
             p-header {
                 display: block;
                 font-size: 1.5rem;

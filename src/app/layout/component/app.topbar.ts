@@ -27,7 +27,7 @@ import { LayoutService } from '../service/layout.service';
                 <i class="pi pi-bars"></i>
             </button>
             <a class="layout-topbar-logo" routerLink="/">
-                <img src="assets/pmoxy_logo.png" alt="PMOXY" class="layout-topbar-logo-img" />
+                <img src="assets/linear_logo.png" alt="Linear Serviços Técnicos" class="layout-topbar-logo-img" />
             </a>
         </div>
 

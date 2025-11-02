@@ -1,0 +1,66 @@
+/* Styles for editarPmoc component (migrated from inline styles)
+   Keep consistent with criarPmoc.scss but include collapsed-summary rules
+*/
+.form-wrapper {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+@media (min-width: 1200px) {
+  .form-wrapper {
+    max-width: calc(100% - 0px);
+    margin: 0 24px;
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+}
+.card {
+  background: var(--surface-card);
+  padding: 1.5rem;
+  border-radius: 6px;
+}
+:host ::ng-deep .p-fluid .field {
+  margin-bottom: 0.75rem;
+}
+.field label { display: inline-block; margin-bottom: 0.35rem; }
+:host ::ng-deep .p-inputtext, :host ::ng-deep .p-inputnumber, :host ::ng-deep .p-select { width: 100%; }
+.formgrid.grid { display:flex; flex-wrap:wrap; gap:var(--fg-row-gap,0.75rem) var(--fg-col-gap,1rem); }
+.formgrid.grid .field { box-sizing:border-box; flex:0 0 100%; max-width:100%; padding:0; }
+@media (min-width:768px){
+  .md\:col-6{flex:0 0 calc(50% - 0.5 * var(--fg-col-gap,1rem)); max-width: calc(50% - 0.5 * var(--fg-col-gap,1rem));}
+}
+
+/* Equipment card */
+.equipment-header{display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem; position:relative; padding-right:3rem}
+.equipment-id{font-weight:700; font-size:1.25rem; color:var(--text-color-secondary); margin-bottom:0.5rem}
+:host ::ng-deep .equipment-pcard{ padding:0.6rem; border:1px solid var(--surface-border); position:relative; overflow:visible; }
+:host ::ng-deep .equipment-pcard .p-card-body{ padding:0 }
+.equipment-body{ display:flex; gap:0.6rem; align-items:flex-start }
+.equip-left{ flex:0 0 160px; max-width:160px; padding-top:0; display:flex; align-items:flex-start }
+.equip-fields{ flex:1 1 auto; min-width:0 }
+@media (max-width:1024px){ .equip-left{ flex:0 0 140px; max-width:140px } }
+@media (max-width:767px){ .equipment-body{ flex-direction:column } .equip-left{ max-width:100%; flex:0 0 auto } }
+.equip-fields .formgrid.grid .field{ flex:0 0 100%; max-width:100% }
+@media (min-width:768px){
+  .equip-fields .md\:col-2{ flex:0 0 calc(33.3333% - 0.66rem); max-width:calc(33.3333% - 0.66rem) }
+  .equip-fields .md\:col-4{ flex:0 0 calc(50% - 0.5rem); max-width:calc(50% - 0.5rem) }
+}
+
+/* Collapsed summary for compact display */
+.equipment-collapsed{ display:flex; gap:0.75rem; align-items:center; padding:0.5rem 0.75rem; border-radius:6px; background:var(--surface-b) }
+.equipment-collapsed .meta{ display:flex; gap:0.5rem; flex-wrap:wrap }
+.equipment-collapsed .meta .item{ font-size:0.9rem; color:var(--text-color-secondary) }
+
+/* Delete button */
+:host ::ng-deep .equipment-pcard .delete-btn{ position:absolute; top:0.5rem; right:0.5rem; width:2.6rem; height:2.6rem; display:inline-flex; align-items:center; justify-content:center; border-radius:6px }
+
+/* Make inputs readable on small screens */
+@media (max-width:767px){
+  :host ::ng-deep .p-inputtext, :host ::ng-deep .p-inputnumber-input, :host ::ng-deep .p-select .p-dropdown-label{ min-height:40px }
+  :host ::ng-deep .delete-btn{ width:40px; height:40px }
+}
+
+/* Dark mode tweaks */
+:host-context(.app-dark) .card{ background:var(--surface-card,#0b1220); color:var(--text-color,#f3f4f6); border:1px solid var(--surface-border, rgba(255,255,255,0.06)) }
+:host-context(.app-dark) .equipment-id{ color:var(--text-color-secondary, rgba(255,255,255,0.75)) }
+:host-context(.app-dark) :host ::ng-deep .p-inputtext, :host-context(.app-dark) :host ::ng-deep .p-inputnumber-input, :host-context(.app-dark) :host ::ng-deep .p-select{ background:var(--surface-ground,#0b1220); color:var(--text-color,#f3f4f6); border-color:var(--surface-border, rgba(255,255,255,0.1)) }

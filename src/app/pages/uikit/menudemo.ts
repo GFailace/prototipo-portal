@@ -99,7 +99,7 @@ import { InputIcon, InputIconModule } from 'primeng/inputicon';
                 <div class="card">
                     <div class="font-semibold text-xl mb-4">Overlay Menu</div>
                     <p-menu #menu [popup]="true" [model]="overlayMenuItems"></p-menu>
-                    <button type="button" pButton icon="pi pi-chevron-down" label="Options" (click)="menu.toggle($event)" style="width:auto"></button>
+                    <button type="button" pButton icon="pi pi-chevron-down" (click)="menu.toggle($event)" class="flex-none whitespace-nowrap" style="width:auto">Options</button>
                 </div>
 
                 <div class="card" #anchor>

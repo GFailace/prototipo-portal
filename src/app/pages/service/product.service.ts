@@ -26,7 +26,7 @@ export class ProductService {
             {
                 id: '1000',
                 code: 'f230fh0g3',
-                name: 'Bamboo Watch',
+                name: 'PMOC-001',
                 description: 'Product Description',
                 image: 'bamboo-watch.jpg',
                 price: 65,
@@ -38,7 +38,7 @@ export class ProductService {
             {
                 id: '1001',
                 code: 'nvklal433',
-                name: 'Black Watch',
+                name: 'PMOC-002',
                 description: 'Product Description',
                 image: 'black-watch.jpg',
                 price: 72,
@@ -50,7 +50,7 @@ export class ProductService {
             {
                 id: '1002',
                 code: 'zz21cz3c1',
-                name: 'Blue Band',
+                name: 'PMOC-003',
                 description: 'Product Description',
                 image: 'blue-band.jpg',
                 price: 79,
@@ -62,7 +62,7 @@ export class ProductService {
             {
                 id: '1003',
                 code: '244wgerg2',
-                name: 'Blue T-Shirt',
+                name: 'PMOC-004',
                 description: 'Product Description',
                 image: 'blue-t-shirt.jpg',
                 price: 29,
@@ -74,7 +74,7 @@ export class ProductService {
             {
                 id: '1004',
                 code: 'h456wer53',
-                name: 'Bracelet',
+                name: 'PMOC-005',
                 description: 'Product Description',
                 image: 'bracelet.jpg',
                 price: 15,
@@ -86,7 +86,7 @@ export class ProductService {
             {
                 id: '1005',
                 code: 'av2231fwg',
-                name: 'Brown Purse',
+                name: 'PMOC-006',
                 description: 'Product Description',
                 image: 'brown-purse.jpg',
                 price: 120,
@@ -98,7 +98,7 @@ export class ProductService {
             {
                 id: '1006',
                 code: 'bib36pfvm',
-                name: 'Chakra Bracelet',
+                name: 'PMOC-007',
                 description: 'Product Description',
                 image: 'chakra-bracelet.jpg',
                 price: 32,
@@ -110,7 +110,7 @@ export class ProductService {
             {
                 id: '1007',
                 code: 'mbvjkgip5',
-                name: 'Galaxy Earrings',
+                name: 'PMOC-008',
                 description: 'Product Description',
                 image: 'galaxy-earrings.jpg',
                 price: 34,
@@ -122,7 +122,7 @@ export class ProductService {
             {
                 id: '1008',
                 code: 'vbb124btr',
-                name: 'Game Controller',
+                name: 'PMOC-009',
                 description: 'Product Description',
                 image: 'game-controller.jpg',
                 price: 99,
@@ -134,7 +134,7 @@ export class ProductService {
             {
                 id: '1009',
                 code: 'cm230f032',
-                name: 'Gaming Set',
+                name: 'PMOC-010',
                 description: 'Product Description',
                 image: 'gaming-set.jpg',
                 price: 299,

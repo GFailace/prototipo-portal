@@ -1,5 +1,20 @@
 :root[class*='app-dark'] {
+    /* Brand color tokens (dark theme) - lighter blue for contrast */
+    --p-primary-color: #66a3ff;
+    --p-primary-contrast-color: #071226;
+    --p-primary-hover: #4d86e6;
+
     --surface-ground: var(--p-surface-950);
     --code-background: var(--p-surface-800);
     --code-color: var(--p-surface-100);
+
+    /* PMOC next-maintenance highlight tokens (dark theme) */
+    --pmoc-next-row-bg: rgba(255,255,255,0.02);
+    --pmoc-next-row-accent: rgba(102,163,255,0.18);
+    --pmoc-next-alert-bg: rgba(255,165,0,0.10);
+    --pmoc-next-alert-accent: rgba(255,165,0,0.36);
+    --pmoc-next-text-color: rgba(255,255,255,0.95);
+    /* Dark-mode specific shadows and backdrop to improve contrast on amber overlays */
+    --pmoc-next-alert-shadow: 0 6px 18px rgba(0,0,0,0.6);
+    --pmoc-next-alert-backdrop: blur(4px);
 }

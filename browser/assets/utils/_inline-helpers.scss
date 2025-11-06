@@ -1,0 +1,17 @@
+/* Utility helpers to replace inline styles used across templates and generated HTML */
+
+.u-cursor-pointer { cursor: pointer; }
+.spacer-12 { height: 12px; }
+.spacer-24 { height: 24px; }
+.text-right { text-align: right; }
+.text-muted-accent { color: #6b7280; }
+.header-title { margin: 0; }
+.section-title { margin: 0 0 8px 0; }
+.pre-wrap { white-space: pre-wrap; color: #111827; }
+.export-card { width: 100%; max-width: 793px; }
+.t-full { width: 100%; }
+.table-cell-pad { padding: 6px 12px; border: 1px solid #e5e7eb; }
+.mt-18 { margin-top: 18px; }
+.font-600 { font-weight: 600; }
+.table-th { text-align: left; padding: 8px; background: #f3f4f6 }
+.table-td { padding: 8px; border-top: 1px solid #e5e7eb }

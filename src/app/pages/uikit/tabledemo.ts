@@ -61,7 +61,7 @@ interface expandedRows {
             >
                 <ng-template #caption>
                     <div class="flex justify-between items-center flex-column sm:flex-row">
-                        <button pButton label="Clear" class="p-button-outlined mb-2" icon="pi pi-filter-slash" (click)="clear(dt1)"></button>
+                        <button pButton class="p-button-outlined mb-2 flex-none whitespace-nowrap" icon="pi pi-filter-slash" (click)="clear(dt1)">Clear</button>
                         <p-iconfield iconPosition="left" class="ml-auto">
                             <p-inputicon>
                                 <i class="pi pi-search"></i>
@@ -241,7 +241,7 @@ interface expandedRows {
             <div class="font-semibold text-xl mb-4">Row Expansion</div>
             <p-table [value]="products" dataKey="id" [tableStyle]="{ 'min-width': '60rem' }" [expandedRowKeys]="expandedRows">
                 <ng-template #caption>
-                    <button pButton icon="pi pi-fw {{ isExpanded ? 'pi-minus' : 'pi-plus' }}" label="{{ isExpanded ? 'Collapse All' : 'Expand All' }}" (click)="expandAll()"></button>
+                    <button pButton [icon]="'pi pi-fw ' + (isExpanded ? 'pi-minus' : 'pi-plus')" class="flex-none whitespace-nowrap" (click)="expandAll()">{{ isExpanded ? 'Collapse All' : 'Expand All' }}</button>
                     <div class="flex table-header"></div>
                 </ng-template>
                 <ng-template #header>
